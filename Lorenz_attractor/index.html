@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>ActractorLorenz</title>
+<meta HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+
+<style type="text/css">
+.info {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	font-size:16px;
+	color: white;
+	text-align:right;
+}
+.btn {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	font-size:16px;
+	color: black;
+	text-align:center;
+    height:30px;
+}
+</style>
+
+<script id="point-vshader" type="x-shader/x-vertex">
+	precision mediump float;
+	uniform mat4 mvp;
+	attribute vec4 curPos;
+	varying vec4 vColor;
+	void main(void) {
+		vec4 pos;
+		pos.xyz = curPos.xyz;
+		pos.w  = 1.0;
+		gl_Position = mvp * pos;
+
+		float maxSize = 9.0;
+		float size = maxSize * (1.0 - curPos.z);
+		if(size < 2.0) size = 4.0;
+		if(size > maxSize) size = maxSize;
+
+		vColor = vec4(1, 0.1, 0.7, 1);
+
+		gl_PointSize  = size;
+
+	}
+</script>
+
+
+<script id="point-fshader" type="x-shader/x-fragment">
+	precision mediump float;
+	varying vec4 vColor;
+	void main(void) {
+		float dx = (gl_PointCoord.x - 0.5);
+		float dy = (gl_PointCoord.y - 0.5);
+		float r = sqrt(dx*dx + dy*dy);
+		float r1 = 0.1;
+
+		if(r < 0.5)
+			//gl_FragColor = vColor;
+			gl_FragColor = 2.0 * (0.5 - r) * vColor;
+
+		if(r >= 0.5)
+			gl_FragColor[3] = 0.0;
+		else if (r < r1)
+			gl_FragColor[3] = vColor[3];
+		else
+			gl_FragColor[3] = 1.0 - ((r - r1)/(0.5 - r1))*vColor[3];
+
+	}
+</script>
+
+<script id="cube-vshader" type="x-shader/x-vertex">
+	precision mediump float;
+	uniform mat4 mvp;
+	attribute vec3 cube;
+	void main()
+	{
+		vec4 pos;
+		pos.xyz = cube.xyz;
+		pos.w  = 1.0;
+		gl_Position = mvp * pos;
+		//gl_Position = pos;
+	}
+</script>
+
+<script id="cube-fshader" type="x-shader/x-fragment">
+	precision mediump float;
+	void main() {
+		gl_FragColor = vec4(1, 0.8, 0.2, 1);
+	}
+</script>
+
+
+<script id="attractor" type ="x-kernel">
+	__kernel void attractor(
+		__global float* curPos, 
+		__global float* curVel, 
+		__global float* genPos, 
+		__global float* genVel,
+		float dt)
+	{
+	//get our index in the array
+	unsigned int gid = get_global_id(0);
+    //copy position and velocity for this iteration to a local variable
+    //note: if we were doing many more calculations we would want to have opencl
+    //copy to a local memory array to speed up memory access (this will be the subject of a later tutorial)
+    
+	float4 localPos = (float4) (curPos[4*gid + 0], curPos[4*gid + 1], curPos[4*gid + 2], curPos[4*gid + 3]);
+	float4 tempPos = (float4) (curPos[4*gid + 0], curPos[4*gid + 1], curPos[4*gid + 2], curPos[4*gid + 3]);	
+	float4 velox =(float4) (curVel[4*gid + 0], curVel[4*gid + 1], curVel[4*gid + 2], curVel[4*gid + 3]);
+
+	float life = velox.w;
+    //decrease the life by the time step (this value could be adjusted to lengthen or shorten particle life
+    life -= dt;
+    //if the life is 0 or less we reset the particle's values back to the original values and set life to 1
+    if(life <= 0.0f)
+	{
+        //localPos = genPos[gid];
+		localPos.xyzw = (float4) (genPos[4*gid + 0], genPos[4*gid + 1], genPos[4*gid + 2], genPos[4*gid + 3]);
+ 	  	//velox = genVel[gid];
+		velox.xyzw = (float4) (genVel[4*gid + 0], genVel[4*gid + 1], genVel[4*gid + 2], genVel[4*gid + 3]);
+    	life = 10.0f;    
+    }
+
+	velox.z = 1*dt;
+    //update the position with the new velocity
+    float sigma = 10;
+    float rho = 28;
+   	float beta = 8/3;
+    localPos.x += (sigma * (tempPos.y - tempPos.x))*dt;
+    localPos.y += (tempPos.x * (rho - tempPos.z) - tempPos.y)*dt;
+    localPos.z += (tempPos.x * tempPos.y - beta * tempPos.z)*dt ;
+
+    //store the updated life in the velocity array
+	velox.w = life;
+
+   //update the arrays with our newly computed values
+    //curPos[gid] = localPos;
+	curPos[4*gid + 0] =localPos.x;
+	curPos[4*gid + 1] =localPos.y;
+	curPos[4*gid + 2] =localPos.z;
+	curPos[4*gid + 3] =localPos.w;
+	// //curVel[gid] = velox;
+	curVel[4*gid + 0] =velox.x;
+	curVel[4*gid + 1] =velox.y;
+	curVel[4*gid + 2] =velox.z;
+	curVel[4*gid + 3] =velox.w;
+
+}
+</script>
+
+
+
+
+<script id="attractor2" type ="x-kernel">
+	__kernel void attractor2(
+		__global float* curPos,
+		__global float* curVel,
+		int numBodies,
+		float deltaTime,
+		int epsSqr,
+		__local float* localPos,
+		__global float* nxtPos,
+		__global float* nxtVel)
+	{
+		unsigned int tid = get_local_id(0);
+		unsigned int gid = get_global_id(0);
+		unsigned int localSize = get_local_size(0);
+
+		// Number of tiles we need to iterate
+		unsigned int numTiles = numBodies / localSize;
+
+		// position of this work-item
+		float4 myPos = (float4) (curPos[4*gid + 0], curPos[4*gid + 1], curPos[4*gid + 2], curPos[4*gid + 3]);
+		float4 acc = (float4) (0.0f, 0.0f, 0.0f, 0.0f);
+
+		for(int i = 0; i < numTiles; ++i)
+		{
+			// load one tile into local memory
+			int idx = i * localSize + tid;
+			for(int k=0; k<4; k++)
+			{
+					localPos[4*tid+k] = curPos[4*idx+k];
+			}
+			// Synchronize to make sure data is available for processing
+			barrier(CLK_LOCAL_MEM_FENCE);
+			// calculate acceleration effect due to each body
+			// a[i->j] = m[j] * r[i->j] / (r^2 + epsSqr)^(3/2)
+			for(int j = 0; j < localSize; ++j)
+			{
+				// Calculate acceleration caused by particle j on particle i
+				float4 aLocalPos = (float4) (localPos[4*j + 0], localPos[4*j + 1], localPos[4*j + 2], localPos[4*j + 3]);
+				float4 r = aLocalPos - myPos;
+				float distSqr = r.x * r.x  +  r.y * r.y  +  r.z * r.z;
+				float invDist = 1.0f / sqrt(distSqr + epsSqr);
+				float invDistCube = invDist * invDist * invDist;
+				float s = aLocalPos.w * invDistCube;
+				// accumulate effect of all particles
+				acc += s * r;
+			}
+			// Synchronize so that next tile can be loaded
+			barrier(CLK_LOCAL_MEM_FENCE);
+		}
+
+		float4 oldVel = (float4) (curVel[4*gid + 0], curVel[4*gid + 1], curVel[4*gid + 2], curVel[4*gid + 3]);
+
+		// updated position and velocity
+		float4 newPos = myPos + oldVel * deltaTime + acc * 0.5f * deltaTime * deltaTime;
+		newPos.w = myPos.w;
+		float4 newVel = oldVel + acc * deltaTime;
+
+		// check boundry
+		if(newPos.x > 1.0f || newPos.x < -1.0f || newPos.y > 1.0f || newPos.y < -1.0f || newPos.z > 1.0f || newPos.z < -1.0f) {
+			float rand = (1.0f * gid) / numBodies;
+			float r = 0.05f *  rand;
+			float theta = rand;
+			float phi = 2 * rand;
+			newPos.x = r * sinpi(theta) * cospi(phi);
+			newPos.y = r * sinpi(theta) * sinpi(phi);
+			newPos.x = r * cospi(theta);
+			newVel.x = 0.0f;
+			newVel.y = 0.0f;
+			newVel.z = 0.0f;
+		}
+
+		// write to global memory
+		nxtPos[4*gid + 0] = newPos.x;
+		nxtPos[4*gid + 1] = newPos.y;
+		nxtPos[4*gid + 2] = newPos.z;
+		nxtPos[4*gid + 3] = newPos.w;
+
+		nxtVel[4*gid + 0] = newVel.x;
+		nxtVel[4*gid + 1] = newVel.y;
+		nxtVel[4*gid + 2] = newVel.z;
+		nxtVel[4*gid + 3] = newVel.w;
+	}
+</script>
+<script src="Util/shader.js"></script>
+<script src="Util/J3DIMath.js"></script>
+<script src="Controller.js"></script>
+<script src="DrawGL.js"></script>
+<script src="InitSimulation.js"></script>
+<script src="CLSimulation.js"></script>
+
+
+</head>
+
+<body onload="onLoad()" bgColor=black>
+<div style="position:absolute; left:200px; top:10px">
+	<div          class="info" style="position:absolute; left:  0px; top:40px; width:130px;">Particles:</div>
+	<div id="num" class="info" style="position:absolute; left:115px; top:40px; width: 60px;">XX</div>
+
+	<div          class="info" style="position:absolute; left:185px; top:40px; width: 60px;">Sim:</div>
+	<div id="sim" class="info" style="position:absolute; left:215px; top:40px; width: 60px;">XX</div>
+
+	<div          class="info" style="position:absolute; left:275px; top:40px; width: 60px;">Draw:</div>
+	<div id="drw" class="info" style="position:absolute; left:305px; top:40px; width: 60px;">XX</div>
+
+	<div id="b3"  class="info" style="position:absolute; left: 30px; top:85px;">
+		<button type="button"  class="btn" style="width:160px;" onClick="ToggleSimRunning()">Start/Stop Sim</button>
+	</div>
+	<div id="b4"  class="info" style="position:absolute; left: 200px; top:85px;">
+		<button type="button"  class="btn" style="width:160px;" onClick="Toggle3D()">Start/Stop 3D</button>
+	</div>
+</div>
+
+<!-- canvas must be square since simulator works in normalized device coordinates -->
+<canvas id="canvas2D" style="z-index: -1; position:absolute; left:200px; top:200px;"></canvas>
+<canvas id="canvas3D" style="z-index: -1; position:absolute; left:200px; top:200px;"></canvas>
+</body>
+</html>
