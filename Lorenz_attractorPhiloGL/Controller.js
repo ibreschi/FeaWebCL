@@ -25,8 +25,8 @@
 * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-var WINW                = 400;          // drawing canvas width
-var WINH                = 400;          // drawing canvas height
+var WINW                = 500;          // drawing canvas width
+var WINH                = 500;          // drawing canvas height
 
 var NBODY               = 2048;         // default number of particles to simulate
 var INNER_FLOPS         = 25;           // number of flops in inner loop of simulation
@@ -73,24 +73,17 @@ function UserData() {
 	this.cubeIndiceVBO  = null;
 
 	this.theta          = 0.2;                  // angle to rotate model    
-	this.modelMatrix    = new J3DIMatrix4();    // updated each frame
-	this.vpMatrix       = new J3DIMatrix4();    // constant
-	this.mvpMatrix      = new J3DIMatrix4();    // updated each frame
-
 	this.simMode        = null; 
 	this.drawMode       = null;
 	this.isSimRunning	= true;
 	this.is3D			= true;
 	this.isGLCLshared   = GLCL_SHARE_MODE;
 
-	this.gl             = null;         // handle for GL context
+	this.webGlDrawer    = null;         // webGl framework
 	this.cl             = null;         // handle for CL context
 }
 
 var userData = null;
-
-function RANDM1TO1() { return Math.random() * 2 - 1; }
-function RAND0TO1() { return Math.random(); }
 
 function onLoad() {
 	if(WINW !== WINH) {
@@ -103,12 +96,10 @@ function onLoad() {
 	//
 	InitController();
 	NBODY = 4 * GetWorkGroupSize() ;
-	//Init Controller to Get the CL Object.
-	//
-	InitController();
-	userData.cl  = InitCL();
+	//userData.cl  = InitCL();
 	SetMode();
-	setInterval( MainLoop, 0 );
+	//setInterval( MainLoop, 0 );
+	MainLoop();
 }
 
 function InitController()
@@ -121,7 +112,8 @@ function InitController()
 	userData.genVel = new Float32Array(NBODY * VEL_ATTRIB_SIZE);
 
 	InitParticles();
-	userData.gl  = InitGL("canvas3D");   
+	userData.webGlDrawer  = new WebGlDrawer();
+	userData.webGlDrawer.init("canvasPrima");   
 }
 
 
@@ -133,13 +125,14 @@ function InitParticles() {
 function MainLoop() {
 
 	if(userData.isSimRunning) {
-		SimulateCL(userData.cl);
+		//SimulateCL(userData.cl);
 	}
 	Draw();
+
 }
 
 function Draw() {
-	DrawGL(userData.gl);
+	userData.webGlDrawer.tick() ;
 }
 
 function SetMode() {

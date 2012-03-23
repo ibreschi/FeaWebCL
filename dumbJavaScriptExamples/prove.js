@@ -1,14 +1,30 @@
 Linea (a,b,c)
 
-var Linea = function (a,b,c){
+var Linea = function (a){
 	if (!(this instanceof Linea)){
-		return new Linea(a,b,c);
+		return new Linea(a);
 	}
 
 	this.a =a;
-	this.b =b;
-	this.c =c;
+
 };
+
+
+
+
+Linea.prototype.init = function (){ 
+	console.log(this.a); 
+	this.a =2; 
+	console.log(this.a); 
+	var Linea.loadFun= function(){ 
+		// da qui voglio accedere ad a
+	 	console.log(this); 
+	 	this.a=4;
+	}
+	loadFun();
+}
+
+
 
 
 Linea.prototype.print2 = function(){
@@ -17,9 +33,6 @@ Linea.prototype.print2 = function(){
 
 
 Linea.print();
-
-
-
 Point.prototype.getDistance = function (x){
  	if(x instanceof Point){
  		return this.getDistanceFromPoint(x);

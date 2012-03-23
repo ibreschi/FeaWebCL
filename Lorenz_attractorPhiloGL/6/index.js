@@ -1,150 +1,122 @@
-function webGLStart() {
-  var xRot = 0, xSpeed = 0,
-      yRot = 0, ySpeed = 0,
-      z = -5.0,
-      filter = 0,
-      filters = ['nearest', 'linear', 'mipmap'];
 
-  //Create object
-  var cube = new PhiloGL.O3D.Model({
-    vertices: [-1, -1,  1,
-                1, -1,  1,
-                1,  1,  1,
-               -1,  1,  1,
 
-               -1, -1, -1,
-               -1,  1, -1,
-                1,  1, -1,
-                1, -1, -1,
+!(function (exports){
 
-               -1,  1, -1,
-               -1,  1,  1,
-                1,  1,  1,
-                1,  1, -1,
 
-               -1, -1, -1,
-                1, -1, -1,
-                1, -1,  1,
-               -1, -1,  1,
+exports.WebGlDrawer = function (){
+  if (!(this instanceof WebGlDrawer)){
+    return new WebGlDrawer();
+  }
+  this.canvasName ="";
+  this.gl = null;
+  this.view= null;
+  this.camera= null;
+  this.program= null;
+  this.cube = null;
+  this.xRot = 0; 
+  this.xSpeed = 0;
+  this.yRot = 0;
+  this.ySpeed = 0;
+  this.z = -10.0;
+  this.stop =false;
+  this.filter = 1;
+  this.xCube=5;
 
-                1, -1, -1,
-                1,  1, -1,
-                1,  1,  1,
-                1, -1,  1,
 
-               -1, -1, -1,
-               -1, -1,  1,
-               -1,  1,  1,
-               -1,  1, -1],
 
-    texCoords: [
-            // Front face
-            0.0, 0.0,
-            1.0, 0.0,
-            1.0, 1.0,
-            0.0, 1.0,
+};
 
-            // Back face
-            1.0, 0.0,
-            1.0, 1.0,
-            0.0, 1.0,
-            0.0, 0.0,
+WebGlDrawer.prototype.init = function (canvasName){
+  this.canvasName= canvasName;
+    var xCube= this.xCube;
+    this.cube = new PhiloGL.O3D.Model({
+      vertices: [ 
+        -xCube, -xCube, -xCube,   // 0
+        -xCube,  xCube, -xCube,   // 1
+        xCube,  xCube, -xCube,   // 2
+        xCube, -xCube, -xCube,   // 3
+        -xCube, -xCube,  xCube,   // 4 frontface
+        -xCube,  xCube,  xCube,   // 5
+        xCube,  xCube,  xCube,   // 6
+        xCube, -xCube,  xCube,   // 7
+        ],
 
-            // Top face
-            0.0, 1.0,
-            0.0, 0.0,
-            1.0, 0.0,
-            1.0, 1.0,
+      indices:  [
+        0, 1,              // backface
+        1, 2,
+        2, 3,
+        3, 0,
+        4, 5,              // frontface
+        5, 6,
+        6, 7,
+        7, 4,
+        0, 4,              // back to front
+        1, 5,
+        2, 6,
+        3, 7]
+    });
+  var that =this;
 
-            // Bottom face
-            1.0, 1.0,
-            0.0, 1.0,
-            0.0, 0.0,
-            1.0, 0.0,
-
-            // Right face
-            1.0, 0.0,
-            1.0, 1.0,
-            0.0, 1.0,
-            0.0, 0.0,
-
-            // Left face
-            0.0, 0.0,
-            1.0, 0.0,
-            1.0, 1.0,
-            0.0, 1.0
-    ],
-
-    indices: [0, 1, 2, 0, 2, 3,
-              4, 5, 6, 4, 6, 7,
-              8, 9, 10, 8, 10, 11,
-              12, 13, 14, 12, 14, 15,
-              16, 17, 18, 16, 18, 19,
-              20, 21, 22, 20, 22, 23]
-  });
-
-  PhiloGL('lesson06-canvas', {
-    program: {
-      from: 'ids',
-      vs: 'shader-vs',
-      fs: 'shader-fs'
-    },
-    events: {
-      onKeyDown: function(e) {
+  var keyPressFun = function(e) {
         switch(e.key) {
-          case 'f':
-            filter = (filter + 1) % 3;
+          case 's':
+            that.xSpeed=0;
+            that.ySpeed=0;
             break;
           case 'up':
-            xSpeed -= 0.02;
+            that.xSpeed -= 0.02;
             break;
           case 'down':
-            xSpeed += 0.02;
+            that.xSpeed += 0.02;
             break;
           case 'left':
-            ySpeed -= 0.02;
+            that.ySpeed -= 0.02;
             break;
           case 'right':
-            ySpeed += 0.02;
+            that.ySpeed += 0.02;
             break;
           //handle page up/down
           default:
             if (e.code == 33) {
-              z -= 0.05;
+              that.z -= 0.05;
             } else if (e.code == 34) {
-              z += 0.05;
+              that.z += 0.05;
             }
         }
       }
-    },
-    onError: function() {
-      alert("An error ocurred while loading the application");
-    },
-    onLoad: function(app) {
-      var gl = app.gl,
-          canvas = app.canvas,
-          program = app.program,
-          camera = app.camera,
-          view = new PhiloGL.Mat4,
-          rCube = 0;
 
+
+  var errorFun = function (){
+      alert("An error ocurred while loading the application");
+    }
+
+
+  var loadFun = function(app){
+      that.gl = app.gl;
+    var gl = that.gl;
+    var  canvas = app.canvas,
+      rCube = 0;
+    that.program = app.program;
+    that.camera = app.camera;
+    that.view = new PhiloGL.Mat4;
+    cube = that.cube;
+          
+
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.clearColor(0, 0, 0, 1);
       gl.clearDepth(1);
       gl.enable(gl.DEPTH_TEST);
       gl.depthFunc(gl.LEQUAL);
       
-      camera.view.id();
+      that.camera.view.id();
 
       //set buffers with cube data
-      program.setBuffers({
+      that.program.setBuffers({
         'aVertexPosition': {
           value: cube.vertices,
           size: 3
-        },
-        'aTextureCoord': {
-          value: cube.texCoords,
-          size: 2
         },
         'indices': {
           value: cube.indices,
@@ -152,82 +124,71 @@ function webGLStart() {
           size: 1
         }
       });
-      
-      //load textures from image
-      var img = new Image();
-      img.onload = function() {
-        program.setTextures({
-          'nearest': {
-            data: {
-              value: img
-            }
-          },
+       
+    }
 
-          'linear': {
-            data: {
-              value: img
-            },
-            parameters: [{
-              name: gl.TEXTURE_MAG_FILTER,
-              value: gl.LINEAR
-            }, {
-              name: gl.TEXTURE_MIN_FILTER,
-              value: gl.LINEAR
-            }]
-          },
-
-          'mipmap': {
-            data: {
-              value: img
-            },
-            parameters: [{
-              name: gl.TEXTURE_MAG_FILTER,
-              value: gl.LINEAR
-            }, {
-              name: gl.TEXTURE_MIN_FILTER,
-              value: gl.LINEAR_MIPMAP_NEAREST,
-              generateMipmap: true
-            }]
-          }
-        });
-        
-        function animate() {
-          xRot += xSpeed;
-          yRot += ySpeed;
-        }
-
-        function tick() {
-          drawScene();
-          animate();
-          PhiloGL.Fx.requestAnimationFrame(tick);
-        }
-
-        function drawScene() {
-          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-          //draw Cube
-          cube.position.set(0, 0, z);
-          cube.rotation.set(xRot, yRot, 0);
-          //update element matrix
-          cube.update();
-          //get new view matrix out of element and camera matrices
-          view.mulMat42(camera.view, cube.matrix);
-          //set attributes, indices and textures
-          program.setBuffer('aVertexPosition')
-                .setBuffer('aTextureCoord')
-                .setBuffer('indices')
-                .setTexture(filters[filter]);
-          //set uniforms
-          program.setUniform('uMVMatrix', view)
-                .setUniform('uPMatrix', camera.projection)
-                .setUniform('uSampler', 0);
-          //draw triangles
-          gl.drawElements(gl.TRIANGLES, cube.indices.length, gl.UNSIGNED_SHORT, 0);
-        }
-        tick();
-      };
-      //load image
-      img.src = 'crate.gif';
-    }  
+  PhiloGL(this.canvasName, {
+    program: {
+      from: 'ids',
+      vs: 'shader-vs',
+      fs: 'shader-fs'
+    },
+    events: {
+      onKeyDown: keyPressFun
+    },
+    onError: errorFun ,
+    onLoad: loadFun 
   });
 }
 
+
+
+WebGlDrawer.prototype.animate = function() {
+  this.xRot += this.xSpeed;
+  this.yRot += this.ySpeed;
+}
+
+
+
+WebGlDrawer.prototype.drawScene = function (){
+  var gl = this.gl;
+
+  var cube = this.cube;
+  var view = this.view;
+  var program = this.program;
+  var camera = this.camera;
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  var cube =this.cube;
+          //draw Cube
+  this.cube.position.set(0, 0, this.z);
+  cube.rotation.set(this.xRot, this.yRot, 0);
+  //update element matrix
+  cube.update();
+  //get new view matrix out of element and camera matrices
+  view.mulMat42(camera.view, cube.matrix);
+  //set attributes, indices and textures
+  program.setBuffer('aVertexPosition').setBuffer('indices');
+  //set uniforms
+  program.setUniform('uMVMatrix', view)
+        .setUniform('uPMatrix', camera.projection);
+  //draw triangles
+    gl.drawElements(gl.LINES, cube.indices.length, gl.UNSIGNED_SHORT, 0);
+
+}
+
+
+
+
+WebGlDrawer.prototype.tick = function(){
+  this.drawScene();
+  this.animate();
+  that =this;
+  PhiloGL.Fx.requestAnimationFrame(function callback(){
+    that.tick();
+  }
+  );
+}
+
+
+
+})(this);

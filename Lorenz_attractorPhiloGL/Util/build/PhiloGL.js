@@ -292,6 +292,7 @@ $.splat = (function() {
   var WebGL = {
     
     getContext: function(canvas, opt) {
+
       var canvas = typeof canvas == 'string'? $(canvas) : canvas, ctx;
       ctx = canvas.getContext('experimental-webgl', opt);
       if (!ctx) {
@@ -2246,7 +2247,7 @@ $.splat = (function() {
     if (!compiled) {
       var info = gl.getShaderInfoLog(shader);
       gl.deleteShader(shader);
-      throw "Error while compiling the shader " + info;
+      throw "Error while compiling the shader !" + info;
       //return false;
     }
     return shader;
