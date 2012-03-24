@@ -38,6 +38,7 @@ $(document).ready(function(){
 	uniform mat4 uMVMatrix;
   	uniform mat4 uPMatrix;
 	void main(void) {
+
 		gl_Position = uPMatrix * uMVMatrix * curPos;
 		float maxSize = 9.0;
 		float size = maxSize * (1.0 - curPos.z);
@@ -79,12 +80,12 @@ $(document).ready(function(){
 
 
 <script id="cube-vshader" type="x-shader/x-vertex">
-	attribute vec3 aVertexPosition;
+	attribute vec3 aVertexPositionz;
   	uniform mat4 uMVMatrix;
   	uniform mat4 uPMatrix;
 
   	void main(void) {
-    	gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+    	gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPositionz, 1.0);
   	}
 </script>
 <script id="cube-fshader" type="x-shader/x-fragment">

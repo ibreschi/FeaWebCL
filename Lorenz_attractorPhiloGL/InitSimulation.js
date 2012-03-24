@@ -21,6 +21,7 @@ function InitParticlesOnFountain() {
 function InitParticle(i, x, y, z, w, vx, vy, vz, vw) {
     var curPos = userData.curPos;
     var curVel = userData.curVel;
+
     var ii = 4*i;
     
     curPos[ii + 0] = x;
@@ -46,6 +47,9 @@ function InitParticle(i, x, y, z, w, vx, vy, vz, vw) {
     genVel[ii + 1] = vy;
     genVel[ii + 2] = vz;
     genVel[ii + 3] = vw;
+
+   // var curPosIndex = userData.curPosIndex;
+    //curPosIndex[i]=i;
 
 
 }

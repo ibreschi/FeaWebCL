@@ -55,6 +55,7 @@ function UserData() {
 	this.genVel         = null;         // generation particle velocity
 	this.curPosLoc      = null;         // location of curPos attribute in vertex shader
 	this.curVelLoc      = null;         // location of curVel attribute in vertex shader
+	//this.curPosIndex 	= null;
 
 	this.mvpPointLoc    = null;         // location of mvp matrix in point vertex shader
 	this.mvpCubeLoc     = null;         // location of mvp matrix in cube vertex shader
@@ -94,8 +95,10 @@ function onLoad() {
 	userData = new UserData();
 	// //Init Controller to Get the WorkGroupSize & Set NBODY to multiple of it.
 	//
-	InitController();
 	NBODY = 4 * GetWorkGroupSize() ;
+	InitController();
+	
+	console.log(NBODY);
 	//userData.cl  = InitCL();
 	SetMode();
 	//setInterval( MainLoop, 0 );
@@ -104,12 +107,12 @@ function onLoad() {
 
 function InitController()
 {
-
 	userData.curPos = new Float32Array(NBODY * POS_ATTRIB_SIZE);
 	userData.curVel = new Float32Array(NBODY * VEL_ATTRIB_SIZE);
 
 	userData.genPos = new Float32Array(NBODY * POS_ATTRIB_SIZE);
 	userData.genVel = new Float32Array(NBODY * VEL_ATTRIB_SIZE);
+	//userData.curPosIndex = new Float32Array(NBODY);
 
 	InitParticles();
 	userData.webGlDrawer  = new WebGlDrawer();
