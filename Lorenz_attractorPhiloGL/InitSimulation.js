@@ -48,8 +48,6 @@ function InitParticle(i, x, y, z, w, vx, vy, vz, vw) {
     genVel[ii + 2] = vz;
     genVel[ii + 3] = vw;
 
-   // var curPosIndex = userData.curPosIndex;
-    //curPosIndex[i]=i;
 
 
 }

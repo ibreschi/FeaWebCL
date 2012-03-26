@@ -59,11 +59,12 @@ function getKernel(id) {
 
 function InitCL() {
 
+
 	try {
 		// Create CL buffers from GL VBOs
 		// (Initial load of positions is via gl.bufferData)
-		//
-		curPosBuffer = context.createFromGLBuffer(cl.MEM_READ_WRITE, userData.curPosVBO);
+		//console.log(userData.webGlDrawer.app.buffers.curPos);
+		curPosBuffer = context.createFromGLBuffer(cl.MEM_READ_WRITE, userData.webGlDrawer.app.buffers.curPos);
 		if(curPosBuffer === null) {
 			console.error("Failed to allocate device memory");
 			return null;
@@ -218,11 +219,9 @@ function GetWorkGroupSize() {
 			//return;
 		}
 		device_id = device_ids[0];
-
 		// Create a compute context
 		//
 		context = cl.createSharedContext(cl.DEVICE_TYPE_GPU, null, null);
-
 		// Create a command queue
 		//
 		queue = context.createCommandQueue(device_id, null);

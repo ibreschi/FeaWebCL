@@ -11,7 +11,8 @@ exports.WebGlDrawer = function (){
 	this.camera= null;
 	this.program= null;
 	this.cube = null;
-  this.cube2= null;
+  this.app=null;
+  // this.cube2= null;
   this.poin=null;
 	this.xRot = 0; 
 	this.xSpeed = 0;
@@ -21,10 +22,9 @@ exports.WebGlDrawer = function (){
   this.stop =false;
   this.filter = 1;
   this.xCube=2;
-
-
-
 };
+
+
 WebGlDrawer.prototype.init = function (canvasName){
   this.canvasName= canvasName;
   //Create object
@@ -58,43 +58,42 @@ WebGlDrawer.prototype.init = function (canvasName){
   });
 
 
-  xCube= 1;
-  this.cube2 = new PhiloGL.O3D.Model({
-    program:'program3',
-    vertices: [ 
-      -xCube, -xCube, -xCube,   // 0
-      -xCube,  xCube, -xCube,   // 1
-      xCube,  xCube, -xCube,   // 2
-      xCube, -xCube, -xCube,   // 3
-      -xCube, -xCube,  xCube,   // 4 frontface
-      -xCube,  xCube,  xCube,   // 5
-      xCube,  xCube,  xCube,   // 6
-      xCube, -xCube,  xCube,   // 7
-      ],
+  // xCube= 1;
+  // this.cube2 = new PhiloGL.O3D.Model({
+  //   program:'program3',
+  //   vertices: [ 
+  //     -xCube, -xCube, -xCube,   // 0
+  //     -xCube,  xCube, -xCube,   // 1
+  //     xCube,  xCube, -xCube,   // 2
+  //     xCube, -xCube, -xCube,   // 3
+  //     -xCube, -xCube,  xCube,   // 4 frontface
+  //     -xCube,  xCube,  xCube,   // 5
+  //     xCube,  xCube,  xCube,   // 6
+  //     xCube, -xCube,  xCube,   // 7
+  //     ],
 
-    indices:  [
-      0, 1,              // backface
-      1, 2,
-      2, 3,
-      3, 0,
-      4, 5,              // frontface
-      5, 6,
-      6, 7,
-      7, 4,
-      0, 4,              // back to front
-      1, 5,
-      2, 6,
-      3, 7]
-  });
+  //   indices:  [
+  //     0, 1,              // backface
+  //     1, 2,
+  //     2, 3,
+  //     3, 0,
+  //     4, 5,              // frontface
+  //     5, 6,
+  //     6, 7,
+  //     7, 4,
+  //     0, 4,              // back to front
+  //     1, 5,
+  //     2, 6,
+  //     3, 7]
+  // });
+
   // Setting the Point model
   this.poin = new PhiloGL.O3D.Model({
-     program:'program2',
-     vertices : userData.curPos,
-      //indices: userData.curPosIndex
-   });
+    program:'program2',
+    vertices : userData.curPos,
+    //indices: userData.curPosIndex
+  });
   
-      
-
   var that =this;
 	var keyPressFun = function(e) {
     switch(e.key) {
@@ -104,7 +103,6 @@ WebGlDrawer.prototype.init = function (canvasName){
         break;
       case 'up':
         that.xSpeed -= 0.02;
-        console.log(that.xSpeed);
         break;
       case 'down':
         that.xSpeed += 0.02;
@@ -129,98 +127,89 @@ WebGlDrawer.prototype.init = function (canvasName){
   }
 
   var loadFun = function(app){
-  	  that.gl = app.gl;
+    that.app =app;
+  	that.gl = app.gl;
     var gl = that.gl;
-    var  canvas = app.canvas,
-      rCube = 0;
+    var  canvas = app.canvas;
+    var rCube = 0;
     that.program = app.program;
     that.camera = app.camera;
     that.view = new PhiloGL.Mat4;
     cube = that.cube;
-      gl.enable(gl.BLEND);
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-      gl.viewport(0, 0, canvas.width, canvas.height);
-      gl.clearColor(0, 0, 0, 1);
-      gl.clearDepth(1);
-      gl.enable(gl.DEPTH_TEST);
-      gl.depthFunc(gl.LEQUAL);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(0, 0, 0, 1);
+    gl.clearDepth(1);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
       
-      that.camera.view.id();
+    that.camera.view.id();
 
 
 
-      that.program.program1.setBuffers({
-        'aVertexPositionz': {
-          value: cube.vertices,
-          size: 3
-        },
-        'indices': {
-          value: cube.indices,
-          bufferType: gl.ELEMENT_ARRAY_BUFFER,
-          size: 1
-        }
-      });
-
-       poin=that.poin;
-   // set buffer with point data
-    that.program.program2.setBuffers({
-       'curPos': {
-         value:   poin.vertices,
-         size: 4
-       }
-       // ,
-       // 'indices': {
-       //    value: poin.indices,
-       //    bufferType: gl.ELEMENT_ARRAY_BUFFER,
-       //    size: 1
-       //  }
+    that.program.program1.setBuffers({
+      'aVertexPositionz': {
+        value: cube.vertices,
+        size: 3
+      },
+      'indices': {
+        value: cube.indices,
+        bufferType: gl.ELEMENT_ARRAY_BUFFER,
+        size: 1
+      }
     });
 
-      cube2 = that.cube2;
+    poin=that.poin;
+   // set buffer with point data
+    that.program.program2.setBuffers({
+      'curPos': {
+        value:   poin.vertices,
+        size: 4
+      }
+    });
 
-            //set buffers with cube data
-      that.program.program3.setBuffers({
-        'aVertexPosition': {
-          value: cube2.vertices,
-          size: 3
-        }
-        ,
-        'indices': {
-          value: cube2.indices,
-          bufferType: gl.ELEMENT_ARRAY_BUFFER,
-          size: 1
-        }
-      });
+    // cube2 = that.cube2;
 
-
-   
+    //       //set buffers with cube data
+    // that.program.program3.setBuffers({
+    //   'aVertexPosition': {
+    //     value: cube2.vertices,
+    //     size: 3
+    //   },
+    //   'indices': {
+    //     value: cube2.indices,
+    //     bufferType: gl.ELEMENT_ARRAY_BUFFER,
+    //     size: 1
+    //   }
+    // });
   }
 
-   PhiloGL(this.canvasName,{
-      program: [{
-             id:'program1',
-         from: 'ids',
-         vs: 'cube-vshader',
-         fs: 'cube-fshader',
-            },
-           {
-             id: 'program2',
-             from: 'ids',
-             vs: 'point-vshader',
-             fs: 'point-fshader',
-        },
-           {
-             id:'program3',
-            from :'ids',
-            vs: 'cube2-vshader',
-            fs:'cube2-fshader',
-          }
-      ],
-   events: {
-     onKeyDown: keyPressFun
-    },
-   onError: errorFun ,
-   onLoad: loadFun 
+  PhiloGL(this.canvasName,{
+    program: [{
+      id:'program1',
+        from: 'ids',
+        vs: 'cube-vshader',
+        fs: 'cube-fshader',
+      },
+      {
+      id: 'program2',
+        from: 'ids',
+        vs: 'point-vshader',
+        fs: 'point-fshader',
+      },
+      // {
+      // id:'program3',
+      //   from :'ids',
+      //   vs: 'cube2-vshader',
+      //   fs:'cube2-fshader',
+      // }
+    ],
+ events: {
+   onKeyDown: keyPressFun
+  },
+ onError: errorFun ,
+ onLoad: loadFun 
  });
 }
 
@@ -258,23 +247,23 @@ WebGlDrawer.prototype.drawScene = function (){
     gl.drawElements(gl.LINES, cube.indices.length, gl.UNSIGNED_SHORT, 0);
 
    }
-  var cube2 =this.cube2;
-  if(userData.is3D) {
-    program.program3.use();
-    cube2.position.set(1, 2, this.z);
-    cube2.rotation.set(this.xRot, this.yRot, 0);
-    //update element matrix
-    cube2.update();
-    //get new view matrix out of element and camera matrices
-    view.mulMat42(camera.view, cube2.matrix);
-    // //set attributes, indices and textures
-    program.program3.setBuffer('aVertexPosition').setBuffer('indices');
-    // //set uniforms
-    program.program3.setUniform('uMVMatrix', view)
-           .setUniform('uPMatrix', camera.projection);
-    // //draw triangles
-    gl.drawElements(gl.LINES, cube2.indices.length, gl.UNSIGNED_SHORT, 0);
-    }
+  // var cube2 =this.cube2;
+  // if(userData.is3D) {
+  //   program.program3.use();
+  //   cube2.position.set(1, 2, this.z);
+  //   cube2.rotation.set(this.xRot, this.yRot, 0);
+  //   //update element matrix
+  //   cube2.update();
+  //   //get new view matrix out of element and camera matrices
+  //   view.mulMat42(camera.view, cube2.matrix);
+  //   // //set attributes, indices and textures
+  //   program.program3.setBuffer('aVertexPosition').setBuffer('indices');
+  //   // //set uniforms
+  //   program.program3.setUniform('uMVMatrix', view)
+  //          .setUniform('uPMatrix', camera.projection);
+  //   // //draw triangles
+  //   gl.drawElements(gl.LINES, cube2.indices.length, gl.UNSIGNED_SHORT, 0);
+  //   }
   
   gl.useProgram(program.program2.program);
   poin.position.set(0, 0, this.z);
@@ -288,12 +277,6 @@ WebGlDrawer.prototype.drawScene = function (){
   program.program2.setUniform('uMVMatrix', view)
            .setUniform('uPMatrix', camera.projection);
 
-  if(test ==1){
-    console.log(NBODY);
-    console.log(poin.vertices.length);
-    test =2 ;
-  }
-
   program.program2.setBuffer('curPos');
   gl.drawArrays(gl.POINTS, 0, NBODY);   
 
@@ -305,11 +288,8 @@ WebGlDrawer.prototype.tick = function(){
   this.animate();
   that =this;
   PhiloGL.Fx.requestAnimationFrame(function callback(){
-    that.tick();
+    MainLoop();
     }
   );
 }
-
-
-
 })(this);

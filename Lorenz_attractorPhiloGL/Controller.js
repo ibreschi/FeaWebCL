@@ -28,7 +28,7 @@
 var WINW                = 500;          // drawing canvas width
 var WINH                = 500;          // drawing canvas height
 
-var NBODY               = 2048;         // default number of particles to simulate
+var NBODY               = 2046;         // default number of particles to simulate
 var INNER_FLOPS         = 25;           // number of flops in inner loop of simulation
 
 var SAMPLEPERIOD        = 10;           // calculate fps and sim/draw times over this many frames
@@ -95,13 +95,11 @@ function onLoad() {
 	userData = new UserData();
 	// //Init Controller to Get the WorkGroupSize & Set NBODY to multiple of it.
 	//
-	NBODY = 4 * GetWorkGroupSize() ;
-	InitController();
 	
-	console.log(NBODY);
-	//userData.cl  = InitCL();
+	InitController();
+	NBODY = 4 * GetWorkGroupSize() ;
+	userData.cl  = InitCL();
 	SetMode();
-	//setInterval( MainLoop, 0 );
 	MainLoop();
 }
 
@@ -112,8 +110,6 @@ function InitController()
 
 	userData.genPos = new Float32Array(NBODY * POS_ATTRIB_SIZE);
 	userData.genVel = new Float32Array(NBODY * VEL_ATTRIB_SIZE);
-	//userData.curPosIndex = new Float32Array(NBODY);
-
 	InitParticles();
 	userData.webGlDrawer  = new WebGlDrawer();
 	userData.webGlDrawer.init("canvasPrima");   
@@ -128,7 +124,7 @@ function InitParticles() {
 function MainLoop() {
 
 	if(userData.isSimRunning) {
-		//SimulateCL(userData.cl);
+		SimulateCL(userData.cl);
 	}
 	Draw();
 
