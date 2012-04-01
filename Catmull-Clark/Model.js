@@ -9,7 +9,7 @@ exports.Model = function (){
   this.meshes = [];
   this.cur_level = 0;
   this.nr_levels= 0;
-  this.file = [];
+  this.file = null;
   this.text=null;
   this.stats = {
     vs: [],
@@ -44,16 +44,13 @@ Model.prototype.readFile = function(file){
       /* Vertex command */
       values =getValues(line);
       mesh.add_vertex(values);
-      } else if (line[0]=="v" && line[1]=="n" ) {
-        /* Normal command */
-      values =getValues(line);  
+    } else if (line[0]=="v" && line[1]=="n" ) {
+      /* Normal command */
+      values =getValues(line); 
       mesh.add_normal(values);
       } else if (line[0]==="f") {
         /* Face command */
         mesh.begin_face();
-
-  //     str = skip_space(++str); /* Skip 'f ' */
-  //     while (*str) {
         vi = ti = ni = 0;
         values = getFaces(line);
         if(values[0].split("/").length==3){
@@ -63,8 +60,7 @@ Model.prototype.readFile = function(file){
             v =values[k].split("/");
             mesh.add_index( v[0] - 1, v[2] - 1);
         };
-        }
-  // }
+      }
   };
   if (!has_normals)
     mesh.compute_normals();
@@ -84,10 +80,7 @@ function getFaces(line){
   var vec=[];
   vec= line.split(" ");
   vec.shift(1);
-  // var mapResult =vec.map(function(item){
-  //   return Number(item);
-  // })
-  // return mapResult;
+
   return vec;
 }
 

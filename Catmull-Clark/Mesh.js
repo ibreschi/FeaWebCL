@@ -22,7 +22,7 @@ Mesh.prototype.destroy =function(){
 }
 
 Mesh.prototype.countVertex = function(){
-  return this.vertexbuf.length / 3;
+  return this.vertexbuf.length /3;
 
 }
 Mesh.prototype.countFaces = function(){
@@ -30,10 +30,8 @@ Mesh.prototype.countFaces = function(){
 
 }
 
-
-
-Mesh.prototype.add_vertex= function(v){
-
+Mesh.prototype.add_vertex= function(v)
+{
   this.vertexbuf.push (v[0]);
   this.vertexbuf.push (v[1]);
   this.vertexbuf.push (v[2]);
@@ -49,7 +47,6 @@ Mesh.prototype.add_normal= function(n)
 Mesh.prototype.begin_face= function()
 {
   this.faces.push(this.indexbuf.length);
-  //this.faces.add()
 }
 
 Mesh.prototype.add_index= function(vi,ni)
@@ -95,23 +92,29 @@ Mesh.prototype.face_vertex_index= function(face, vert)
 {
   var beg,idx;
   beg = this.faces[face];
+  //console.log (this.indexbuf);
   idx = this.indexbuf[beg + vert];
-  vertex_idx = idx[0];
-  normal_idx = idx[1];
-  return [vertex_idx,normal_idx]
+  vertex_idx = idx.vi;
+  normal_idx = idx.ni;
+  return [vertex_idx,normal_idx,normal_idx]
 }
-// corretto
+// deve ritornare un vettore
 Mesh.prototype.get_vertex= function(face, vert){
   var vi;
 
   vi = this.face_vertex_index(face, vert)[0];
-  return this.vertexbuf[vi * 3];
+  var ris = [this.vertexbuf[vi*3],this.vertexbuf[vi*3+1],this.vertexbuf[vi*3+2]]
+
+  return ris;
 }
-// corretto
+// deve ritornare un vettore
 Mesh.prototype.get_normal= function(face,  vert){
   var ni;
   ni =this.face_vertex_index(face, vert)[1];
-  return ni != -1 ? this.normalbuf[ni * 3] : null;
+  var ris = [this.normalbuf[ni*3],this.normalbuf[ni*3+1],this.normalbuf[ni*3+2]]
+
+  //console.log(ni);
+  return ni != -1 ? ris : null;
 }
 
 

@@ -101,6 +101,12 @@ WebGlDrawer.prototype.init = function (canvasName){
         that.xSpeed=0;
         that.ySpeed=0;
         break;
+      case 'o':
+        that.xRot=0;
+        that.yRot=0;
+        that.xSpeed=0;
+        that.ySpeed=0;
+        break;
       case 'up':
         that.xSpeed -= 0.02;
         break;
@@ -124,6 +130,20 @@ WebGlDrawer.prototype.init = function (canvasName){
   }
   var errorFun = function (e){
     alert("An error ocurred while loading the application" + e);
+  }
+
+  var mouseWheel= function(e) {
+    e.stop();
+    var camera = that.camera;
+    camera.position.z += e.wheel;
+    camera.update();
+    console.log(camera);
+  }
+
+
+  var dragMove =  function(e) {
+    that.xRot = -e.y/100;
+    that.yRot = e.x/100;
   }
 
   var loadFun = function(app){
@@ -206,7 +226,9 @@ WebGlDrawer.prototype.init = function (canvasName){
       // }
     ],
  events: {
-   onKeyDown: keyPressFun
+    onDragMove: dragMove,
+    onKeyDown: keyPressFun,
+    onMouseWheel: mouseWheel
   },
  onError: errorFun ,
  onLoad: loadFun 

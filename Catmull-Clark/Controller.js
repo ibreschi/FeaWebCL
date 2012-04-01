@@ -5,7 +5,7 @@
 var WINW                = 500;          // drawing canvas width
 var WINH                = 500;          // drawing canvas height
 var JS_SIM_MODE         = true;
-var CL_SIM_MODE         = true;
+var CL_SIM_MODE         = false;
 var GL_DRAW_MODE        = true;
 
 var GLCL_SHARE_MODE     = true;         // shareMode is boolean
@@ -45,13 +45,24 @@ Controller.prototype.InitController = function ()
 {
   
   this.InitModels();
-  this.webGlDrawer  = new WebGlDrawer();
-  this.webGlDrawer.init("canvasPrima");  
 
+  if (this.is3D){
+    this.webGlDrawer  = new WebGlDrawer();
+    this.webGlDrawer.init("canvasCC",this); 
+  }
+  //if (CL_SIM_MODE)}{
+    //NBODY = 4 * GetWorkGroupSize() ;
+    //this.cl  = InitCL();
+  //}
+
+  if (this.js_simMode){
+    this.SetMode(this.js_simMode);
+  }
+  else {
+    this.SetMode(this.cl_simMode);
+  }
+  this.SetStats();  
   this.render(); 
-
-  SetMode();
-  MainLoop();
 }
 
 
@@ -60,6 +71,7 @@ Controller.prototype.add_obj = function(file,nr_levels){
   model.meshes[0] = model.readFile(file);
   model.cur_level=0;
   model.nr_levels=nr_levels
+  model.file = file;
   model.stats.vs[0] = model.meshes[0].countVertex();
   model.stats.fs[0] = model.meshes[0].countFaces();
 
@@ -74,18 +86,63 @@ Controller.prototype.add_obj = function(file,nr_levels){
   this.models.push(model);
 };
 
+Controller.prototype.InitModels= function(){
+  console.log("Adding a Cube");
+  this.add_obj("objs/cube.obj",4);
+  console.log("Cube added");
 
-Controller.prototype.current_model = function(){
-  return this.models[this.current_model].mesh;
+  console.log("Adding a Tetrahedron");
+  this.add_obj("objs/tetra.obj",4);
+  console.log("Tetrahedron added");
+
+  console.log("Adding a Bigguy");
+  this.add_obj("objs/bigguy.obj",3);
+  console.log("Bigguy added");
+  console.log("Adding a Monsterfrog");
+  this.add_obj("objs/monsterfrog.obj",3);
+  console.log("Monsterfrog added");
+
+
+  // others add 
+};
+Controller.prototype.render = function (){
+  var model = this.models[this.current_model];
+  // glPushAttrib(GL_LIGHTING_BIT | GL_POLYGON_BIT);
+  // glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,
+  //        (GLfloat[4]) { 1.0f, 1.0f, 1.0f, 1.0f });
+
+  if (this.wireframe) {
+    //SETUP OF 
+  //     glDisable(GL_LIGHTING);
+  //     glColor3f(0.0f, 1.0f, 0.0f);
+  //     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  }
+  // DRAW THE CURRENT LEVEL OF THE MODEL IN NORMAL MODE
+  //glCallList(ed_obj->lists + ed_obj->cur_level);
+
+  // glPopAttrib();
+  //this.webGlDrawer.mesh_renderText();
+  this.webGlDrawer.tick();
+}
+
+
+exports.Controller.prototype.currentModel = function(){
+  return this.models[this.current_model];
 };
 
 Controller.prototype.next_model = function(){
-  this.current_model +=1; 
+  if (this.current_model<this.models.length-1)
+    this.current_model +=1; 
   // fix dimension of list
+  this.SetStats();  
+  this.webGlDrawer.changeMesh();
 };
 Controller.prototype.prev_model = function(){
+  if (this.current_model>0)
   this.current_model -=1; 
     // fix dimension of list
+  this.SetStats();  
+  this.webGlDrawer.changeMesh();
 };
 
 Controller.prototype.next_level = function(){
@@ -107,40 +164,37 @@ Controller.prototype.toggle_wireframe = function(){
 };
 
 
-Controller.prototype.InitModels= function(){
-  this.add_obj("cube.obj",4);
-};
 
-Controller.prototype.SetMode= function() {
-  var div = document.getElementById("sim");
-
-  div.firstChild.nodeValue = (userData.cl === null)? "NA" : "CL";
-  
-  var div = document.getElementById("drw");
-  div.firstChild.nodeValue = (userData.gl === null)? "NA" : "GL";
-};
-
-Controller.prototype.render = function (){
+Controller.prototype.SetStats= function(){
   var model = this.models[this.current_model];
-  console.log(model);
-  // glPushAttrib(GL_LIGHTING_BIT | GL_POLYGON_BIT);
-  // glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,
-  //        (GLfloat[4]) { 1.0f, 1.0f, 1.0f, 1.0f });
-
-  if (this.wireframe) {
-    //SETUP OF 
-  //     glDisable(GL_LIGHTING);
-  //     glColor3f(0.0f, 1.0f, 0.0f);
-  //     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  }
-  // DRAW THE CURRENT LEVEL OF THE MODEL IN NORMAL MODE
-  //glCallList(ed_obj->lists + ed_obj->cur_level);
-
-  // glPopAttrib();
-  this.webGlDrawer.tick();
+  document.getElementById("numV").firstChild.nodeValue = model.stats.vs[model.cur_level];
+  document.getElementById("numF").firstChild.nodeValue = model.stats.fs[model.cur_level];
+  document.getElementById("nameModel").firstChild.nodeValue = model.file;
 }
+
+Controller.prototype.SetMode= function(isJs) {
+  var div = document.getElementById("sim");
+  if(isJs){
+    div.firstChild.nodeValue =  "JS";
+  }
+  else {
+    div.firstChild.nodeValue = (this.cl === null)? "NA" : "CL";
+  }
+  var div = document.getElementById("drw");
+  div.firstChild.nodeValue = (this.gl === null)? "NA" : "GL";
+};
+Controller.prototype.ToggleSimRunning=function()
+{
+  this.isSimRunning = !this.isSimRunning;
+}
+
+Controller.prototype.Toggle3D=function()
+{
+  this.is3D = !this.is3D;
+}
+
 
 
 })(this);
 
-var controller = new Controller();
+//var controller = new Controller();
