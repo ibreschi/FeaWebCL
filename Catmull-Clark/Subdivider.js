@@ -2,16 +2,17 @@
 
 
 
+
 !(function (exports){
 
 sdVertex = function (){
-	if (!(this instanceof sdVert)){
-    return new sdVert();
+	if (!(this instanceof sdVertex)){
+    return new sdVertex();
   }
   this.vectorP = null;
   this.vectorNewP = null;
-  this.es =[];
-  this.fs =[];
+  this.edges =[];
+  this.faces =[];
 }
 
 sdEdge = function (){
@@ -30,7 +31,7 @@ sdFace = function (){
     return new sdFace();
   }
   this.vs =[];
-  this.fvert= null;
+  this.fvert= -1;
 }
 
 
@@ -47,56 +48,136 @@ exports.Subdivider = function (){
 
 Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
 	var i, levels;
-	//this.init(mesh);
+	this.init(mesh);
 	// for (i = 0; i < nr_levels; i++) {
 	// 	this.do_iteration( i == nr_levels - 1);
 	// 	levels[i] = this.convert();
 	// }
 
-	// this.destroy();
+	//this.destroy();
 	return levels;
 }
 
 
-// Subdivider.prototype.init = function(mesh){
-// 	var i, j, nr_verts, nr_faces;
-// 	var vbuf;
-// 	var f;
-// 	var vidx, nidx;
-// 	struct sd_vert *v;
+Subdivider.prototype.destroy =function(){
+  var i ,j;
 
-// 	this.first_iteration = 1;
-// 	this.verts = null;
-// 	this.faces = null;
-// 	this.edges = null;
+  for (i = 0; i < this.verts.length; i++)
+  {
+    this.verts[i].edges=[];
+    this.verts[i].faces=[];
+  }
+  this.verts=[];
 
-// 	/* Create vertices */
+  for (j = 0; j < this.faces.length; j++)
+    this.faces[i].vs=[];
+  this.faces=[];
+  this.edges=[];
+}
+
+Subdivider.prototype.init = function(mesh){
+	var i, j, nr_verts, nr_faces;
+	var vbuf;
+	var f=[];
+	var vidx, nidx;
+	var Sub_vertices=[];
+  var subVert;
+
+	this.first_iteration = 1;
+
+	/* Create vertices */
 	
-// 	vbuf = mesh.vertexbuf;
-// 	nr_verts = vbuf.length;
-// 	buf_resize(this.verts, nr_verts);
-// 	for ((v) = (this.verts); (v) < (this.verts) + this.verts.length; (v)++)	{
-// 		v.p=vbuf;
-// 		v.es = null;
-// 		v.fs = null;
-// 		vbuf += 3;
-// 	}
+	vbuf = mesh.vertexbuf;
+	nr_verts = mesh.countVertex();
+	//buf_resize(this.verts, nr_verts);
+  for (var i = 0; i < nr_verts; i++) {
+    this.verts.push(new sdVertex());
+    this.verts[i].vectorP=[vbuf[3*i],vbuf[3*i+1],vbuf[3*i+2]];
+  };
 
-// 	/* Create faces */
-// 	nr_faces = mesh.faces.length;
-// 	for (i = 0; i < nr_faces; i++) {
-// 		f = this.faces[i];
-// 		f.vs = null;
-// 		f.fvert = -1;
-// 		nr_verts = mesh.face_vertex_count(i);
-// 		for (j = 0; j < nr_verts; j++) {
-// 			vidx =mesh.face_vertex_index(i, j)[0];
-// 			f.vs.push( vidx);
-// 		}
-// 	}
-// 	/* Create edges */
-// 	this.update_links();
-// }
+	/* Create faces */
+	nr_faces = mesh.faces.length;
+	for (var k = 0; k < nr_faces; k++) {
+		this.faces.push( new sdFace());
+		nr_verts = mesh.face_vertex_count(k);
+		for (j = 0; j < nr_verts; j++) {
+			vidx =mesh.face_vertex_index(k, j)[0];
+			this.faces[k].vs.push(vidx);
+		}
+	}
+	/* Create edges */
+	this.update_links();
+}
+
+
+Subdivider.prototype.update_links= function(){
+  var Sub_vertices = [];
+  var Sub_faces= [];
+  var subFace;
+  var edge;
+  for (var i = 0; i < this.faces.length ; i++){
+    Sub_faces[i] = this.faces[i];
+    for (var j = 0; j < Sub_faces[i].vs.length; j++) {
+
+      var v0, v1, ei;
+
+      v0 = Sub_faces[i].vs[j];
+      
+      v1 = Sub_faces[i].vs[(j+1) % Sub_faces[i].vs.length];
+      this.verts[v0].faces.push(Sub_faces[i]);
+      ei = this.find_edge(v0, v1);
+      if (ei == -1) {
+        edge =new sdEdge();
+        edge.v0 = v0;
+        edge.v1 = v1;
+        //something to do
+        edge.f0 = i;
+        edge.f1 = -1;
+        edge.evert = -1;
+        this.edges.push(edge);
+        ei = this.edges.length - 1;
+        this.verts[v0].edges.push( ei);
+        this.verts[v1].edges.push( ei);
+      } else {
+        //assert(this.edges[ei].f1 == -1);
+        this.edges[ei].f1 = i;
+      }
+    }
+  }
+
+//edge.v0,edge.v1 ,edge.f0,edge.f1,edge.evert
+// 0 ,1 ,0 ,3 ,-1  
+// 1 ,3 ,0 ,4 ,-1  
+// 3 ,2 ,0 ,1 ,-1  
+// 2 ,0 ,0 ,5 ,-1  
+// 3 ,5 ,1 ,4 ,-1  
+// 5 ,4 ,1 ,2 ,-1  
+// 4 ,2 ,1 ,5 ,-1  
+// 5 ,7 ,2 ,4 ,-1  
+// 7 ,6 ,2 ,3 ,-1  
+// 6 ,4 ,2 ,5 ,-1  
+// 7 ,1 ,3 ,4 ,-1  
+// 0 ,6 ,3 ,5 ,-1  
+}
+
+
+// 
+Subdivider.prototype.find_edge= function(v0, v1){
+ var ei ,v , e;
+ v = this.verts[v0];
+  for (var i = 0; i < v.edges.length; i++) {
+    
+    ei =v.edges[i]
+    //console.log(ei);
+    e = this.edges[ei];
+    //console.log(e);
+   if ((e.v0 == v0 && e.v1 == v1) || 
+       (e.v0 == v1 && e.v1 == v0))
+     return ei;
+  };
+ return -1;
+}
+
 
 // Subdivider.prototype.do_iteration= function(last_iteration)
 // {
@@ -117,6 +198,7 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
 // 	Vn = V + F + E;
 // 	if (this.first_iteration) {
 // 		Fn = 0;
+  //(it, a) for ((it) = (a); (it) < (a) + buf_len(a); (it)++)
 // 		buf_foreach(f, this.faces)
 // 			Fn += buf_len(f->vs);
 // 		this.first_iteration = 0;
@@ -130,10 +212,12 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
 // 	buf_reserve(this.verts, Vn);
 
 // 	/* Create face vertices */
+  //(it, a) for ((it) = (a); (it) < (a) + buf_len(a); (it)++)
 // 	buf_foreach(f, this.faces) {
 // 		vector p;
 
 // 		vec_zero(p);
+  //(it, a) for ((it) = (a); (it) < (a) + buf_len(a); (it)++)
 // 		buf_foreach(vi, f->vs)
 // 			vec_add(p, p, this.verts[*vi].p);
 // 		vec_mul(p, 1.0f / buf_len(f->vs), p);
@@ -141,6 +225,7 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
 // 	}
 
 // 	/* Create edge vertices */
+  //(it, a) for ((it) = (a); (it) < (a) + buf_len(a); (it)++)
 // 	buf_foreach(e, this.edges) {
 // 		vector p;
 
@@ -155,6 +240,7 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
 // 	}
 
 // 	/* Move old vertices */
+  //(it, a) for ((it) = (a); (it) < (a) + buf_len(a); (it)++)
 // 	buf_foreach(v, this.verts) {
 // 		int n;
 // 		vector p;
@@ -169,16 +255,19 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
 // 		vec_mul(v->newp, (float) (n - 2) / n, v->newp);
 
 // 		vec_zero(p);
+  //(it, a) for ((it) = (a); (it) < (a) + buf_len(a); (it)++)
 // 		buf_foreach(fi, v->fs)
 // 			vec_add(p, p, this.verts[this.faces[*fi].fvert).p];
 // 		vec_mad(v->newp, 1.0f / (n * n), p);
 		
 // 		vec_zero(p);
+  //(it, a) for ((it) = (a); (it) < (a) + buf_len(a); (it)++)
 // 		buf_foreach(ei, v->es)
 // 			vec_add(p, p, this.edge_other(&this.edges[*ei], v)->p);
 // 		vec_mad(v->newp, 1.0f / (n * n), p);
 // 	}
 
+  //(it, a) for ((it) = (a); (it) < (a) + buf_len(a); (it)++)
 // 	buf_foreach(v, this.verts) {
 // 		if (sd_vi(v) >= V)
 // 			break;
@@ -187,6 +276,7 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
 
 // 	/* 2. Create new faces */
 // 	buf_reserve(faces, Fn);
+  //(it, a) for ((it) = (a); (it) < (a) + buf_len(a); (it)++)
 // 	buf_foreach(f, this.faces) {
 // 		int j;
 // 		for (j = 0; j < buf_len(f->vs); j++) {
@@ -241,16 +331,6 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
 // 	this.verts.push(v);
 // 	return this.verts.length - 1;
 // }
-// Subdivider.prototype.find_edge= function(v0, v1){
-// 	var ei ,v , e;
-// 	v = this.verts[v0];
-// 	for ((ei) = (v.es); (ei) < (v.es) + v.es.length; (ei)++) {
-// 		e = this.edges[ei];
-// 		if ((e.v0 == v0 && e.v1 == v1) || (e.v0 == v1 && e.v1 == v0))
-// 			return ei;
-// 	}
-// 	return -1;
-// }
 
 // Subdivider.prototype.edge_other = function (struct sd_edge *e, struct sd_vert *v) {
 // 	int vi;
@@ -259,63 +339,9 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
 // 	return &this.verts[e->v0 == vi ? e->v1 : e->v0];
 // }
 
-// Subdivider.prototype.update_links= function(){
-// 	struct sd_vert *v;
-// 	struct sd_face *f;
-
-// 	buf_foreach(v, this.verts) {
-// 		buf_resize(v->fs, 0);
-// 		buf_resize(v->es, 0);
-// 	}
-
-// 	buf_resize(this.edges, 0);
-// 	buf_foreach(f, this.faces) {
-// 		int j;
-// 		for (j = 0; j < buf_len(f->vs); j++) {
-// 			int v0, v1, ei;
-
-// 			v0 = f->vs[j];
-// 			v1 = f->vs[(j+1) % buf_len(f->vs)];
-// 			buf_push(this.verts[v0].fs, sd_fi(f));
-// 			ei = sd_find_edge(sd, v0, v1);
-// 			if (ei == -1) {
-// 				struct sd_edge edge;
-// 				edge.v0 = v0;
-// 				edge.v1 = v1;
-// 				edge.f0 = sd_fi(f);
-// 				edge.f1 = -1;
-// 				edge.evert = -1;
-
-// 				buf_push(this.edges, edge);
-// 				ei = buf_len(this.edges) - 1;
-// 				buf_push(this.verts[v0].es, ei);
-// 				buf_push(this.verts[v1].es, ei);
-// 			} else {
-// 				assert(this.edges[ei].f1 == -1);
-// 				this.edges[ei].f1 = sd_fi(f);
-// 			}
-// 		}
-// 	}
-// }
 
 
-// Subdivider.prototype.destroy =function(){
-// 	var i ,j;
 
-// 	for (i = 0; i < this.verts.length; i++)
-// 	{
-// 		this.verts[i].es=[];
-// 		this.verts[i].fs=[];
-// 	}
-// 	this.verts=[];
-
-// 	for (j = 0; j < this.faces.length; j++)
-// 		this.faces[i].vs=[];
-// 	this.faces=[];
-// 	this.edges=[];
-
-// 	free(sd);
-// }
 
 
 

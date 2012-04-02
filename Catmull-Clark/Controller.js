@@ -62,7 +62,7 @@ Controller.prototype.InitController = function ()
     this.SetMode(this.cl_simMode);
   }
   this.SetStats();  
-  this.render(); 
+  //this.render(); 
 }
 
 
@@ -91,16 +91,16 @@ Controller.prototype.InitModels= function(){
   this.add_obj("objs/cube.obj",4);
   console.log("Cube added");
 
-  console.log("Adding a Tetrahedron");
-  this.add_obj("objs/tetra.obj",4);
-  console.log("Tetrahedron added");
+  // console.log("Adding a Tetrahedron");
+  // this.add_obj("objs/tetra.obj",4);
+  // console.log("Tetrahedron added");
 
-  console.log("Adding a Bigguy");
-  this.add_obj("objs/bigguy.obj",3);
-  console.log("Bigguy added");
-  console.log("Adding a Monsterfrog");
-  this.add_obj("objs/monsterfrog.obj",3);
-  console.log("Monsterfrog added");
+  // console.log("Adding a Bigguy");
+  // this.add_obj("objs/bigguy.obj",3);
+  // console.log("Bigguy added");
+  // console.log("Adding a Monsterfrog");
+  // this.add_obj("objs/monsterfrog.obj",3);
+  // console.log("Monsterfrog added");
 
 
   // others add 

@@ -59,20 +59,6 @@ Mesh.prototype.add_index= function(vi,ni)
   this.indexbuf.push(idx);
 }
 
-// // side effect
-// Mesh.prototype.vertex_buffer= function(buf)
-// {
-//   if (buf)
-//     *buf = this.vertexbuf;
-//   return this.vertexbuf.lenght / 3;
-// }
-// //side effect
-// Mesh.prototype.normal_buffer= function(buf)
-// {
-//   if (buf)
-//     *buf = this.normalbuf;
-//   return this.normalbuf.length / 3;
-// }
 
 
 // corretto
@@ -87,12 +73,11 @@ Mesh.prototype.face_vertex_count= function(face)
 }
 
 
-// corretto
+// returns a vector [vi,ni]
 Mesh.prototype.face_vertex_index= function(face, vert)
 {
   var beg,idx;
   beg = this.faces[face];
-  //console.log (this.indexbuf);
   idx = this.indexbuf[beg + vert];
   vertex_idx = idx.vi;
   normal_idx = idx.ni;

@@ -332,8 +332,8 @@ WebGlDrawer.prototype.mesh_renderText= function(){
   for(var f = 0; f<nr_faces;f++){
     
     nr_verts=mesh.face_vertex_count(f);
-    //console.log("Faccia: ",f," num vert ",nr_verts );
-    //un poligono
+    console.log("Faccia: ",f," num vert ",nr_verts );
+    //a polygon
     for(var v =0;v<nr_verts;v++){
 
       ele1=mesh.get_normal(f,v);
