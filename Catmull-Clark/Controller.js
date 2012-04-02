@@ -74,7 +74,6 @@ Controller.prototype.add_obj = function(file,nr_levels){
   model.file = file;
   model.stats.vs[0] = model.meshes[0].countVertex();
   model.stats.fs[0] = model.meshes[0].countFaces();
-
   var sub = new Subdivider();
   var levels;
   levels = sub.subdivide_levels(model.meshes[0], nr_levels - 1);
@@ -88,7 +87,7 @@ Controller.prototype.add_obj = function(file,nr_levels){
 
 Controller.prototype.InitModels= function(){
   console.log("Adding a Cube");
-  this.add_obj("objs/cube.obj",4);
+  this.add_obj("objs/cube.obj",3);
   console.log("Cube added");
 
   // console.log("Adding a Tetrahedron");

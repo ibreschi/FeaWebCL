@@ -45,9 +45,9 @@ Mesh.prototype.add_normal= function(n)
 }
 
 Mesh.prototype.begin_face= function()
-{
-  this.faces.push(this.indexbuf.length);
-}
+ {
+   this.faces.push(this.indexbuf.length);
+ }
 
 Mesh.prototype.add_index= function(vi,ni)
 {
@@ -103,45 +103,39 @@ Mesh.prototype.get_normal= function(face,  vert){
 }
 
 
-// Mesh.prototype.compute_normals= function()
-// {
-//   var nr_faces, nr_verts, idx;
-
-//   var v0,v1,v2,vn;
-
-//   buf_resize(this.normalbuf, this.vertexbuf.length);
-//   memset(this.normalbuf, 0, this.normalbuf.length * sizeof(*this.normalbuf));
-
-//   for (var k = 0; k < this.indexbuf.length; k++) {
-//     idx =this.indexbuf[k];
-//     idx.ni =idx.vi;
-//   };
-
-//   nr_faces = this.faces.length;
-//   for (var i = 0; i < nr_faces; i++) {
-//     nr_verts = this.face_vertex_count(i);
-//     for (var j = 0; j < nr_verts; j++) {
-//       var u, v,n; 
-//       v0 = this.get_vertex( i, j);
-//       v1 = this.get_vertex( i, (j + 1) % nr_verts);
-//       v2 = this.get_vertex( i, (j + nr_verts - 1) % nr_verts);
+Mesh.prototype.compute_normals= function() {
+  var nr_faces, nr_verts, idx;
+  var v0,v1,v2,vn;
 
 
-//       u = vec_sub(v1, v0);
-//       v = vec_sub(v2, v0);
-//       n = vec_cross(u, v);
-//       n=vec_normalize(n);
+  for (var k = 0; k < this.indexbuf.length; k++) {
+    idx =this.indexbuf[k];
+    idx.ni =idx.vi;
+  };
 
-//       vn = this.get_normal( i, j);
-//       vn =vec_add(vn, n);
-//     }
-//   }
+  nr_faces = this.faces.length;
+  for (var i = 0; i < nr_faces; i++) {
+    nr_verts = this.face_vertex_count(i);
+    for (var j = 0; j < nr_verts; j++) {
+      var u, v,n; 
+      v0 = this.get_vertex( i, j);
+      v1 = this.get_vertex( i, (j + 1) % nr_verts);
+      v2 = this.get_vertex( i, (j + nr_verts - 1) % nr_verts);
+      vec_sub(u,v1, v0);
+      vec_sub(v,v2, v0);
+      vec_cross(n,u, v);
+      vec_normalize(n,n);
 
-//   for (i = 0; i < this.normalbuf.length; i += 3) {
-//     float *n = this.normalbuf + i;
-//     n=vec_normalize(n, n);
-//   }
-// }
+      vn = this.get_normal( i, j);
+      vec_add(vn,vn, n);
+    }
+  }
+
+  for (i = 0; i < this.normalbuf.length; i += 3) {
+    n = this.normalbuf + i;
+    vec_normalize(n, n);
+  }
+}
 
 // Mesh.prototype.printMesh= function(){
 //   var i, nr_faces;
@@ -161,21 +155,7 @@ Mesh.prototype.get_normal= function(face,  vert){
 //     }
 //   }
 
-// }
-
-// vec_add = function (){
-//   r.x = a.x + b.x;
-//   r.y = a.y + b.y;
-//   r.z = a.z + b.z;
-
-// }
-// vec_sub = function (){
-
-// }
-
-// vec_cross = function (){}
-
-// vec_normalize = function (){}
+//}
 
 })(this);
 
