@@ -59,9 +59,6 @@ Mesh.prototype.add_index= function(vi,ni)
   this.indexbuf.push(idx);
 }
 
-
-
-// corretto
 Mesh.prototype.face_vertex_count= function(face)
 {
   var beg, end;
@@ -97,8 +94,6 @@ Mesh.prototype.get_normal= function(face,  vert){
   var ni;
   ni =this.face_vertex_index(face, vert)[1];
   var ris = [this.normalbuf[ni*3],this.normalbuf[ni*3+1],this.normalbuf[ni*3+2]]
-
-  //console.log(ni);
   return ni != -1 ? ris : null;
 }
 

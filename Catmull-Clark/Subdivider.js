@@ -1,6 +1,6 @@
 
 !(function (exports){
-
+var adds =0;
 sdVertex = function (){
 	if (!(this instanceof sdVertex)){
     return new sdVertex();
@@ -47,7 +47,7 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
 	this.init(mesh);
 	for (i = 0; i < nr_levels; i++) {
     this.do_iteration( i==nr_levels - 1 );
-    //levels[i] = this.convert();
+    levels[i] = this.convert();
 	}
 
 	//this.destroy();
@@ -83,6 +83,7 @@ Subdivider.prototype.init = function(mesh){
 	
 	vbuf = mesh.vertexbuf;
 	nr_verts = mesh.countVertex();
+
   for (var i = 0; i < nr_verts; i++) {
     this.verts.push(new sdVertex());
     this.verts[i].vectorP=[vbuf[3*i],vbuf[3*i+1],vbuf[3*i+2]];
@@ -107,6 +108,14 @@ Subdivider.prototype.update_links= function(){
   var Sub_faces= [];
   var subFace;
   var edge;
+
+  for (var i = 0; i < this.verts.length; i++) {
+    this.verts[i].edges=[];
+    this.verts[i].faces =[];
+  };
+  this.edges=[];
+
+
   for (var i = 0; i < this.faces.length ; i++){
     Sub_faces[i] = this.faces[i];
     for (var j = 0; j < Sub_faces[i].vs.length; j++) {
@@ -161,14 +170,13 @@ Subdivider.prototype.do_iteration= function(last_iteration){
 	 * F' = Sum_i=0^F(f_i), (F' = 4F, when quad-mesh)
 	 * E' = 2E + F'
 	 */
-  var V,F,E,Vn,Fn,En;
+  var V,F,E,Fn;
 	V = this.verts.length;
 	F = this.faces.length;
 	E = this.edges.length;
-	Vn = V + F + E;
+  console.log(V,F,E);
   if (this.first_iteration) {
  	  Fn = 0;
-  //(it, a) for ((it) = (a); (it) < (a) + buf_len(a); (it)++)
     for (var i = 0; i < F; i++) {
       Fn += this.faces[i].vs.length;
     };
@@ -177,11 +185,10 @@ Subdivider.prototype.do_iteration= function(last_iteration){
     /* After the first iteration all faces are quads */
     Fn = 4 * F;
   }
-  En = 2 * E + Fn;
+
 	/* 1. Update vertices */
 	/* Create face vertices */
-    var face ,p,q,len;
-    q= [];
+    var face ,p,len;
     for (var i = 0; i < F; i++) {
       face =this.faces[i];
       p= [0,0,0];
@@ -189,8 +196,7 @@ Subdivider.prototype.do_iteration= function(last_iteration){
       for (var j = 0; j < len; j++) {
         vec_add(p,p,this.verts[face.vs[j]].vectorP);
       };
-
-      vec_mul(q, (1.0 / len), p);
+      vec_mul(p, (1.0 / len), p);
       face.fvert = this.add_vert(p);
     };
 
@@ -223,20 +229,15 @@ Subdivider.prototype.do_iteration= function(last_iteration){
     vec_mul(v.vectorNewP, appog, v.vectorNewP);
     p= [0,0,0];
     for (var k = 0; k < v.faces.length; k++) {
-      
-
       fi =this.faces.indexOf(v.faces[k]);
-      // non trova v.faces[k]
-      console.log(fi);
-      console.log(this.faces[fi].fvert)
-      vec_add(p, p, this.verts[this.faces[fi].fvert].vectorP);
-
+      var k=v.faces[k].fvert ;
+      vec_add(p, p, this.verts[k].vectorP);
     };
     vec_mad(v.vectorNewP, 1.0 / (n * n), p);
     p= [0,0,0];
     for (var t = 0; t < v.edges.length; t++) {
       ei=v.edges[t];
-      vec_add(p, p, this.edge_other(this.edges[ei], v).vectorP);
+      vec_add(p, p, this.edge_other(this.edges[ei], i).vectorP);
     };
     vec_mad(v.vectorNewP, 1.0 / (n * n), p);
   };
@@ -253,10 +254,9 @@ Subdivider.prototype.do_iteration= function(last_iteration){
   var e1;
   var v0,v,v1;
   /* 2. Create new faces */
-  for (var i = 0; i < this.faces.length; i++) {
+  for (var i = 0; i < F; i++) {
     f=this.faces[i]
     for (j = 0; j < f.vs.length; j++) {
-
       v0=f.vs[(j - 1 + f.vs.length) % f.vs.length];
       v  = f.vs[j];
       v1 = f.vs[(j + 1) % f.vs.length];
@@ -285,18 +285,15 @@ Subdivider.prototype.do_iteration= function(last_iteration){
 Subdivider.prototype.add_vert= function(p){
 	var v = new sdVertex();
 	v.vectorP= p;
-	v.es = null;
-	v.fs = null;
 	this.verts.push(v);
+
+  //console.log(adds++);
 	return this.verts.length - 1;
 }
 
 Subdivider.prototype.edge_other = function (e,v) {
 	var vi;
-
-	//vi = sd_vi(v);
-  vi =this.verts.indexOf(v);
-	//assert(e.v0 == vi || e.v1 == vi);
+  vi =this.verts[v];
 	return this.verts[e.v0 == vi ? e.v1 : e.v0];
 }
 

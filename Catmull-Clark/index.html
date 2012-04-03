@@ -57,6 +57,7 @@ $(document).ready(function(){
 
   	void main(void) {
     	gl_Position = uPMatrix * uMVMatrix * vec4(position, 1.0);
+    	gl_PointSize  =3.0;
   	}
 </script>
 <script id="point-fshader" type="x-shader/x-fragment">
@@ -73,6 +74,7 @@ $(document).ready(function(){
 
 <script src="Controller.js"></script>
 <script src="WebGlDrawer.js"></script>
+
 </head>
   
 
@@ -92,19 +94,33 @@ $(document).ready(function(){
 	<div          class="info" style="position:relative; left:0px;top:-36px ; width: 60px;">Draw:</div>
 	<div id="drw" class="info" style="position:relative; left:100px;top:-54px;  width: 60px;">XX</div>
 
-	<div id="b3"  class="info" style="position:relative; left: 0px; top:-24px">
+	<div id="b1"  class="info" style="position:relative; left: 0px; top:-24px">
 		<button type="button"  class="btn" style="width:140px;" onClick="ToggleSimRunning()">Start/Stop Sim</button>
 	</div>
-	<div id="b4"  class="info" style="position:relative; left: 160px;top:-54px;">
+	<div id="b2"  class="info" style="position:relative; left: 160px;top:-54px;">
 		<button type="button"  class="btn" style="width:140px;" onClick="Toggle3D()">Start/Stop 3D</button>
 	</div>
 </div>
 
   <div class="rightControls">
+  	<div id="b3"  class="info" style="position:relative; left: 0px;top:5px;">
+		<button type="button"  class="btn" style="width:120px;" onClick="PrevModel()">PrevModel</button>
+	</div>
+	<div id="b4"  class="info" style="position:relative; left: 160px; top: -25px;">
+		<button type="button"  class="btn" style="width:120px;" onClick="NextModel()">NextModel</button>
+	</div>
+	<div id="b5"  class="info" style="position:relative; left: 0px;top:35px;">
+		<button type="button"  class="btn" style="width:120px;" onClick="PrevLevel()">PrevLevel</button>
+	</div>
+	<div id="b6"  class="info" style="position:relative; left: 160px; top: 5px;">
+		<button type="button"  class="btn" style="width:120px;" onClick="NextLevel()">NextLevel</button>
+	</div>
   </div >
 <div class="className">
 <!-- canvas must be square since simulator works in normalized device coordinates -->
 	<canvas id="canvasCC" width="400" height="400"></canvas>
+
+<script src="index.js"></script>
 </div>
 </body>
 </html>

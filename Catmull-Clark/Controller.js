@@ -32,18 +32,16 @@ exports.Controller = function (){
   this.cl             = null;         // handle for CL context
 
 
-  if(WINW !== WINH) {
-    console.error("Error: drawing canvas must be square");
-    return;
-  }
-  this.InitController();
 };
 
 
 
 Controller.prototype.InitController = function ()
 {
-  
+  if(WINW !== WINH) {
+    console.error("Error: drawing canvas must be square");
+    return;
+  }
   this.InitModels();
 
   if (this.is3D){
@@ -62,7 +60,7 @@ Controller.prototype.InitController = function ()
     this.SetMode(this.cl_simMode);
   }
   this.SetStats();  
-  //this.render(); 
+  this.render(); 
 }
 
 
@@ -77,29 +75,29 @@ Controller.prototype.add_obj = function(file,nr_levels){
   var sub = new Subdivider();
   var levels;
   levels = sub.subdivide_levels(model.meshes[0], nr_levels - 1);
-  //for (i = 0; i < nr_levels - 1; i++) {
-  //  model.meshes[i+1]=levels[i];
-  //  model.stats.vs[i+1] = model.meshes[i+1].countVertex();
-  //  model.stats.fs[i+1] = model.meshes[i+1].countFaces();
-  //}
+  for (i = 0; i < nr_levels - 1; i++) {
+    model.meshes[i+1]=levels[i];
+    model.stats.vs[i+1] = model.meshes[i+1].countVertex();
+    model.stats.fs[i+1] = model.meshes[i+1].countFaces();
+  }
   this.models.push(model);
 };
 
 Controller.prototype.InitModels= function(){
   console.log("Adding a Cube");
-  this.add_obj("objs/cube.obj",3);
+  this.add_obj("objs/cube.obj",5);
   console.log("Cube added");
 
-  // console.log("Adding a Tetrahedron");
-  // this.add_obj("objs/tetra.obj",4);
-  // console.log("Tetrahedron added");
+  console.log("Adding a Tetrahedron");
+  this.add_obj("objs/tetra.obj",5);
+  console.log("Tetrahedron added");
 
-  // console.log("Adding a Bigguy");
-  // this.add_obj("objs/bigguy.obj",3);
-  // console.log("Bigguy added");
-  // console.log("Adding a Monsterfrog");
-  // this.add_obj("objs/monsterfrog.obj",3);
-  // console.log("Monsterfrog added");
+  console.log("Adding a Bigguy");
+  this.add_obj("objs/bigguy.obj",3);
+  console.log("Bigguy added");
+  console.log("Adding a Monsterfrog");
+  this.add_obj("objs/monsterfrog.obj",3);
+  console.log("Monsterfrog added");
 
 
   // others add 
@@ -145,17 +143,22 @@ Controller.prototype.prev_model = function(){
 };
 
 Controller.prototype.next_level = function(){
-  var model = this.current_model;
-  if(this.cur_level<model.nr_levels -1){
+  var model = this.currentModel();
+  if(model.cur_level<model.nr_levels -1){
     model.cur_level ++;
+
   }
+  this.SetStats();  
+  this.webGlDrawer.changeMesh();
 };
 
 Controller.prototype.prev_level = function(){
-  var model = this.current_model;
-  if(this.cur_level>0){
+  var model = this.currentModel();
+  if(model.cur_level>0){
     model.cur_level --;
   }
+  this.SetStats();  
+  this.webGlDrawer.changeMesh();
 };
 
 Controller.prototype.toggle_wireframe = function(){
