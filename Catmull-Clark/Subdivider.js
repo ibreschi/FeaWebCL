@@ -50,7 +50,7 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
     levels[i] = this.convert();
 	}
 
-	//this.destroy();
+	this.destroy();
 	return levels;
 }
 
@@ -174,7 +174,6 @@ Subdivider.prototype.do_iteration= function(last_iteration){
 	V = this.verts.length;
 	F = this.faces.length;
 	E = this.edges.length;
-  console.log(V,F,E);
   if (this.first_iteration) {
  	  Fn = 0;
     for (var i = 0; i < F; i++) {
@@ -194,10 +193,12 @@ Subdivider.prototype.do_iteration= function(last_iteration){
       p= [0,0,0];
       len = face.vs.length;
       for (var j = 0; j < len; j++) {
+
         vec_add(p,p,this.verts[face.vs[j]].vectorP);
       };
       vec_mul(p, (1.0 / len), p);
       face.fvert = this.add_vert(p);
+              //console.log(face.fvert);
     };
 
   /* Create edge vertices */
@@ -215,9 +216,8 @@ Subdivider.prototype.do_iteration= function(last_iteration){
 
   };
 
-  var n,appog;
+  var n,appog,z;
   /* Move old vertices */
-
   for (var i = 0; i < V; i++) {
     v =this.verts[i];
 
@@ -229,9 +229,8 @@ Subdivider.prototype.do_iteration= function(last_iteration){
     vec_mul(v.vectorNewP, appog, v.vectorNewP);
     p= [0,0,0];
     for (var k = 0; k < v.faces.length; k++) {
-      fi =this.faces.indexOf(v.faces[k]);
-      var k=v.faces[k].fvert ;
-      vec_add(p, p, this.verts[k].vectorP);
+      z=v.faces[k].fvert ;
+      vec_add(p, p, this.verts[z].vectorP);
     };
     vec_mad(v.vectorNewP, 1.0 / (n * n), p);
     p= [0,0,0];
@@ -286,8 +285,6 @@ Subdivider.prototype.add_vert= function(p){
 	var v = new sdVertex();
 	v.vectorP= p;
 	this.verts.push(v);
-
-  //console.log(adds++);
 	return this.verts.length - 1;
 }
 
@@ -312,7 +309,7 @@ Subdivider.prototype.convert=function(){
         mesh.add_index(face.vs[i], -1);
      };
 	}
-  //	mesh.compute_normals();
+  mesh.compute_normals();
 	return mesh;
 }
 

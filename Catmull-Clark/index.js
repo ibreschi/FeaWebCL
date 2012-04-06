@@ -22,3 +22,9 @@ function PrevLevel(){
   c.prev_level();
   
 }
+function ModeCL(){
+	c.SetMode(false);
+}
+function ModeJS(){
+	c.SetMode(true);
+}

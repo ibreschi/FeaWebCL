@@ -29,8 +29,7 @@ exports.Controller = function (){
   this.isGLCLshared   = GLCL_SHARE_MODE;
 
   this.webGlDrawer    = null;         // webGl framework
-  this.cl             = null;         // handle for CL context
-
+  this.subdivider = null;
 
 };
 
@@ -42,24 +41,31 @@ Controller.prototype.InitController = function ()
     console.error("Error: drawing canvas must be square");
     return;
   }
+  
+  // start the JS subdivider engine
+  if (this.js_simMode){
+    this.subdivider= new Subdivider();
+    this.SetMode(this.js_simMode);
+  }
+  else {
+    // start the CL subdivider engine
+    //NBODY = 4 * GetWorkGroupSize() ;
+    this.subdivider= WebCLProgram();
+    this.subdivider.InitWebCL();
+    this.SetMode(this.js_simMode);
+  }
+
+  // Load Objects
   this.InitModels();
 
+  // start of WebGL engine 
   if (this.is3D){
     this.webGlDrawer  = new WebGlDrawer();
     this.webGlDrawer.init("canvasCC",this); 
   }
-  //if (CL_SIM_MODE)}{
-    //NBODY = 4 * GetWorkGroupSize() ;
-    //this.cl  = InitCL();
-  //}
 
-  if (this.js_simMode){
-    this.SetMode(this.js_simMode);
-  }
-  else {
-    this.SetMode(this.cl_simMode);
-  }
   this.SetStats();  
+
   this.render(); 
 }
 
@@ -72,9 +78,8 @@ Controller.prototype.add_obj = function(file,nr_levels){
   model.file = file;
   model.stats.vs[0] = model.meshes[0].countVertex();
   model.stats.fs[0] = model.meshes[0].countFaces();
-  var sub = new Subdivider();
   var levels;
-  levels = sub.subdivide_levels(model.meshes[0], nr_levels - 1);
+  levels = this.subdivider.subdivide_levels(model.meshes[0], nr_levels - 1);
   for (i = 0; i < nr_levels - 1; i++) {
     model.meshes[i+1]=levels[i];
     model.stats.vs[i+1] = model.meshes[i+1].countVertex();
@@ -180,18 +185,17 @@ Controller.prototype.SetMode= function(isJs) {
     div.firstChild.nodeValue =  "JS";
   }
   else {
-    div.firstChild.nodeValue = (this.cl === null)? "NA" : "CL";
+    div.firstChild.nodeValue = (this.subdivider.cl === undefined)? "NA" : "CL";
   }
   var div = document.getElementById("drw");
   div.firstChild.nodeValue = (this.gl === null)? "NA" : "GL";
 };
-Controller.prototype.ToggleSimRunning=function()
-{
+
+Controller.prototype.ToggleSimRunning=function(){
   this.isSimRunning = !this.isSimRunning;
 }
 
-Controller.prototype.Toggle3D=function()
-{
+Controller.prototype.Toggle3D=function(){
   this.is3D = !this.is3D;
 }
 

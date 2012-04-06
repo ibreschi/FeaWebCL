@@ -338,10 +338,10 @@ WebGlDrawer.prototype.mesh_renderText= function(){
 
       ele1=mesh.get_normal(f,v);
       if (ele1){
-        console.log("Normale di ",v,"=",ele1);
+        console.log("  Normale di ",v,"=",ele1);
       }
       ele2= mesh.get_vertex(f,v);
-      console.log("Valore di ",v,"=",ele2);
+      console.log("  Valore di ",v,"=",ele2);
     }
   }
 }

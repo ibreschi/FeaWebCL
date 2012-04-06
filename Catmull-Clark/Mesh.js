@@ -107,12 +107,14 @@ Mesh.prototype.compute_normals= function() {
     idx =this.indexbuf[k];
     idx.ni =idx.vi;
   };
-
+  var u,v,n;
   nr_faces = this.faces.length;
   for (var i = 0; i < nr_faces; i++) {
     nr_verts = this.face_vertex_count(i);
     for (var j = 0; j < nr_verts; j++) {
-      var u, v,n; 
+      u=[];
+      v=[];
+      n=[];
       v0 = this.get_vertex( i, j);
       v1 = this.get_vertex( i, (j + 1) % nr_verts);
       v2 = this.get_vertex( i, (j + nr_verts - 1) % nr_verts);

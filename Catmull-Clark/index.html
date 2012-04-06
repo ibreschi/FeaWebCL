@@ -25,10 +25,10 @@ $(document).ready(function(){
 			position:'absolute',
 			top: ($(window).height() - $('.leftControls').outerHeight())/2
 		});
-    $('.rightControls').css({
-      position:'absolute',
-      top: ($(window).height() - $('.rightControls').outerHeight())/2
-    });
+    	$('.rightControls').css({
+      		position:'absolute',
+      		top: ($(window).height() - $('.rightControls').outerHeight())/2
+    	});
 	});
 	$(window).resize();
 });
@@ -57,7 +57,7 @@ $(document).ready(function(){
 
   	void main(void) {
     	gl_Position = uPMatrix * uMVMatrix * vec4(position, 1.0);
-    	gl_PointSize  =3.0;
+    	//gl_PointSize  =1.0;
   	}
 </script>
 <script id="point-fshader" type="x-shader/x-fragment">
@@ -66,12 +66,41 @@ $(document).ready(function(){
 		gl_FragColor = vec4(0.56, 0, 1, 1);
 	}
 </script>
+
+
+
+
+<script id="GenFacePoints" type ="x-kernel">
+
+__kernel void GenFacePoints(
+	float * * facesVs,
+	float * * facesOut
+	){
+	unsigned int gid = get_global_id(0);
+
+	float3 p= (float3) (0.0f, 0.0f, 0.0f);
+
+
+}
+</script>
+
+
+<script id="GenEdgePoints" type ="x-kernel">
+</script>
+
+
+<script id="GenVertexPoints" type ="x-kernel">
+</script>
+
+
+
+
 <script src="Util/Utils.js"></script>
 <script src="Mesh.js"></script>
 <script src="Model.js"></script>
 <script src="Subdivider.js"></script>
+<script src="ParallelSubdivider.js"></script>
 <script src="Util/build/PhiloGL.js"></script>
-
 <script src="Controller.js"></script>
 <script src="WebGlDrawer.js"></script>
 
@@ -100,6 +129,13 @@ $(document).ready(function(){
 	<div id="b2"  class="info" style="position:relative; left: 160px;top:-54px;">
 		<button type="button"  class="btn" style="width:140px;" onClick="Toggle3D()">Start/Stop 3D</button>
 	</div>
+	<div id="b01"  class="info" style="position:relative; left: 0;top:-54px;">
+		<button type="button"  class="btn" style="width:140px;" onClick="ModeJS()">ModeJS</button>
+	</div>
+	<div id="b00"  class="info" style="position:relative; left: 160px;top:-84px;">
+		<button type="button"  class="btn" style="width:140px;" onClick="ModeCL()">ModeCL</button>
+	</div>
+
 </div>
 
   <div class="rightControls">
