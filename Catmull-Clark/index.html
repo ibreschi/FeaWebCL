@@ -72,13 +72,33 @@ $(document).ready(function(){
 
 <script id="GenFacePoints" type ="x-kernel">
 
+float3 SumVectorF(float3 a, float3 b)
+  	{	
+    	return a+b;
+  	}
+float3 ProdVectorF(float3 a, float3 b)
+	{
+		return a*b;
+	}
+
 __kernel void GenFacePoints(
-	float * * facesVs,
-	float * * facesOut
+	float4 * facesVs,
+	float4 * facesOut,
+	float3 * points,
+	int len
 	){
 	unsigned int gid = get_global_id(0);
 
 	float3 p= (float3) (0.0f, 0.0f, 0.0f);
+	int4 vectors = facesVs[gid];
+
+	int j;
+	for (j = 0; j < len; j++) {
+        p=SumVectorF(p,this.verts[vectors[j]);
+      };
+    p=ProdVectorF((1.0f / len), p);
+    
+    face.fvert = this.add_vert(p);
 
 
 }

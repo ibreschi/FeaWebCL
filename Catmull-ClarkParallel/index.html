@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Catmullclark</title>
+<meta HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+<link rel="stylesheet" type="text/css" href="styles.css" />
+
+
+
+
+<script id="genFacePoints" type ="x-kernel">
+
+float3 SumVectorF(float3 a, float3 b)
+  	{	
+    	return a+b;
+  	}
+float3 ProdVectorF(float3 a, float3 b)
+	{
+		return a*b;
+	}
+
+__kernel void genFacePoints(
+	__global int * facesVs,
+	__global int * facesFvert,
+	__global float * verts,
+	__global float * outPoints,
+		int len)
+	{
+	unsigned int gid = get_global_id(0);	
+	float3 p= (float3) (0.0f, 0.0f, 0.0f);
+	int4 vertices = (int4) (facesVs[4*gid],facesVs[4*gid+1],facesVs[4*gid+2],facesVs[4*gid+3]);
+	float3 point;
+	int j;
+	for (j = 0; j < len; j++) {
+		int vn = (int)vertices[j];
+		point.xyz = (float3) (verts[3*vn], verts[(3*vn)+1], verts[(3*vn)+2]);
+        p=SumVectorF(p,point);
+	}
+ 	p=ProdVectorF((1.0f / len), p);
+ 	outPoints[3*gid + 0] = p.x;
+	outPoints[3*gid + 1] = p.y;
+	outPoints[3*gid + 2] = p.z;
+	facesFvert[gid] = get_global_size(0)+gid+2;
+
+}
+</script>
+
+<script id="genEdgePoints" type ="x-kernel">
+
+float3 SumVectorF(float3 a, float3 b)
+  	{	
+    	return a+b;
+  	}
+float3 ProdVectorF(float3 a, float3 b)
+	{
+		return a*b;
+	}
+
+__kernel void genEdgePoints(
+	__global int * facesFvert,
+	__global float * verts,
+	__global int * edgesv0,
+  	__global int * edgesv1,
+ 	__global int * edgesf0,
+  	__global int * edgesf1,
+  	__global float * outPoints,
+ 	__global int * outEdgesEvert)
+	{
+
+	unsigned int gid = get_global_id(0);	
+
+	int eV0 = (int) (edgesv0[gid]);
+	int eV1 = (int) (edgesv1[gid]);
+	int eF0 = (int) (edgesf0[gid]);
+	int eF1 = (int) (edgesf1[gid]);
+
+
+	float3 p = (float3) (0.0f, 0.0f, 0.0f);
+	float3 vP0 = (float3) (verts[eV0], verts[eV0+1], verts[eV0+2]);
+	float3 vP1 = (float3) (verts[eV1], verts[eV1+1], verts[eV1+2]);
+	float3 vP2 = (float3) (verts[facesFvert[eF0]], verts[facesFvert[eF0]+1], verts[facesFvert[eF0]+2]);
+	float3 vP3 = (float3) (verts[facesFvert[eF1]], verts[facesFvert[eF1]+1], verts[facesFvert[eF1]+2]);
+    
+
+    p=SumVectorF(p,vP0);
+    p=SumVectorF(p,vP1);
+    p=SumVectorF(p,vP2);
+    p=SumVectorF(p,vP3);
+ 	p=ProdVectorF((0.25f), p);
+ 	outPoints[gid + 0] = p.x;
+	outPoints[gid + 1] = p.y;
+	outPoints[gid + 2] = p.z;
+	outEdgesEvert[gid] = gid;
+
+    //face.fvert = this.add_vert(p);
+
+
+}
+</script>
+
+
+<script id="genVertexPoints" type ="x-kernel">
+
+float3 SumVectorF(float3 a, float3 b)
+  	{	
+    	return a+b;
+  	}
+float3 ProdVectorF(float3 a, float3 b)
+	{
+		return a*b;
+	}
+
+__kernel void genVertexPoints(
+	__global int * facesVs,
+	__global int * facesFvert,
+	__global float * verts,
+	__global float * outPoints,
+	// int * OutFacesFvert,
+		int len)
+	{
+	unsigned int gid = get_global_id(0);	
+	float3 p= (float3) (0.0f, 0.0f, 0.0f);
+	int4 vectors = (int4) (facesVs[gid],facesVs[gid]+1,facesVs[gid]+2,facesVs[gid]+3);
+	float3 point;
+	int j;
+	for (j = 0; j < len; j++) {
+		int vn = (int)vectors[j];
+		point = (float3) (verts[vn], verts[vn+1], verts[vn+2]);
+        p=SumVectorF(p,point);
+	}
+ 	p=ProdVectorF((1.0f / len), p);
+ 	outPoints[gid + 0] = p.x;
+	outPoints[gid + 1] = p.y;
+	outPoints[gid + 2] = p.z;
+
+
+
+}
+</script>
+
+
+
+
+<script src="Util/Utils.js"></script>
+<script src="Mesh.js"></script>
+<script src="Model.js"></script>
+<script src="WebCLController.js"></script>
+<script src="ParallelProcedures/GenFacePoints.js"></script>
+<script src="ParallelProcedures/GenEdgePoints.js"></script>
+<script src="ParallelProcedures/GenVertexPoints.js"></script>
+<script src="ParallelSubdivider.js"></script>
+<script src="Controller.js"></script>
+<script src="index.js"></script>
+
+</head>
+</html>

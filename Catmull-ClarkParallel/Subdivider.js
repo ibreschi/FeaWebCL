@@ -50,7 +50,7 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
     levels[i] = this.convert();
 	}
 
-	//this.destroy();
+	this.destroy();
 	return levels;
 }
 
@@ -99,7 +99,6 @@ Subdivider.prototype.init = function(mesh){
 			this.faces[k].vs.push(vidx);
 		}
 	}
-  console.log(this);
 	/* Create edges */
 	this.update_links();
 }
@@ -175,16 +174,16 @@ Subdivider.prototype.do_iteration= function(last_iteration){
 	V = this.verts.length;
 	F = this.faces.length;
 	E = this.edges.length;
-  // if (this.first_iteration) {
- 	//   Fn = 0;
-  //   for (var i = 0; i < F; i++) {
-  //     Fn += this.faces[i].vs.length;
-  //   };
-  //   this.first_iteration=0;
-  // }else {
-  //   /* After the first iteration all faces are quads */
-  //   Fn = 4 * F;
-  // }
+  if (this.first_iteration) {
+ 	  Fn = 0;
+    for (var i = 0; i < F; i++) {
+      Fn += this.faces[i].vs.length;
+    };
+    this.first_iteration=0;
+  }else {
+    /* After the first iteration all faces are quads */
+    Fn = 4 * F;
+  }
 
 	/* 1. Update vertices */
 	/* Create face vertices */
@@ -194,89 +193,90 @@ Subdivider.prototype.do_iteration= function(last_iteration){
       p= [0,0,0];
       len = face.vs.length;
       for (var j = 0; j < len; j++) {
+
         vec_add(p,p,this.verts[face.vs[j]].vectorP);
       };
       vec_mul(p, (1.0 / len), p);
       face.fvert = this.add_vert(p);
+              //console.log(face.fvert);
     };
-  console.log(this);
 
-  // /* Create edge vertices */
-  // for (var i = 0; i < E; i++) {
-  //   p=[0,0,0];
-  //   e = this.edges[i];
+  /* Create edge vertices */
+  for (var i = 0; i < E; i++) {
+    p=[0,0,0];
+    e = this.edges[i];
 
-  //   vec_add(p, p, this.verts[e.v0].vectorP);
-  //   vec_add(p, p, this.verts[e.v1].vectorP);
-  //   vec_add(p, p, this.verts[this.faces[e.f0].fvert].vectorP);
-  //   vec_add(p, p, this.verts[this.faces[e.f1].fvert].vectorP);
-  //   vec_mul(p, 0.25, p);
-  //   e.evert = this.add_vert(p);
+    vec_add(p, p, this.verts[e.v0].vectorP);
+    vec_add(p, p, this.verts[e.v1].vectorP);
+    vec_add(p, p, this.verts[this.faces[e.f0].fvert].vectorP);
+    vec_add(p, p, this.verts[this.faces[e.f1].fvert].vectorP);
+    vec_mul(p, 0.25, p);
+    e.evert = this.add_vert(p);
     
 
-  // };
+  };
 
-  // var n,appog,z;
-  // /* Move old vertices */
-  // for (var i = 0; i < V; i++) {
-  //   v =this.verts[i];
+  var n,appog,z;
+  /* Move old vertices */
+  for (var i = 0; i < V; i++) {
+    v =this.verts[i];
 
-  //   if(i>=V)
-  //     break;
-  //   n= v.faces.length;
-  //   vec_copy(v.vectorNewP, v.vectorP);
-  //   appog=(n - 2) / n;
-  //   vec_mul(v.vectorNewP, appog, v.vectorNewP);
-  //   p= [0,0,0];
-  //   for (var k = 0; k < v.faces.length; k++) {
-  //     z=v.faces[k].fvert ;
-  //     vec_add(p, p, this.verts[z].vectorP);
-  //   };
-  //   vec_mad(v.vectorNewP, 1.0 / (n * n), p);
-  //   p= [0,0,0];
-  //   for (var t = 0; t < v.edges.length; t++) {
-  //     ei=v.edges[t];
-  //     vec_add(p, p, this.edge_other(this.edges[ei], i).vectorP);
-  //   };
-  //   vec_mad(v.vectorNewP, 1.0 / (n * n), p);
-  // };
+    if(i>=V)
+      break;
+    n= v.faces.length;
+    vec_copy(v.vectorNewP, v.vectorP);
+    appog=(n - 2) / n;
+    vec_mul(v.vectorNewP, appog, v.vectorNewP);
+    p= [0,0,0];
+    for (var k = 0; k < v.faces.length; k++) {
+      z=v.faces[k].fvert ;
+      vec_add(p, p, this.verts[z].vectorP);
+    };
+    vec_mad(v.vectorNewP, 1.0 / (n * n), p);
+    p= [0,0,0];
+    for (var t = 0; t < v.edges.length; t++) {
+      ei=v.edges[t];
+      vec_add(p, p, this.edge_other(this.edges[ei], i).vectorP);
+    };
+    vec_mad(v.vectorNewP, 1.0 / (n * n), p);
+  };
 
-  // for (var i = 0; i < V; i++) {
-  //   v = this.verts[i];
-  //   if (i >= V)
-  //     break;
-  //   vec_copy(v.vectorP, v.vectorNewP);
-  // };
+  for (var i = 0; i < V; i++) {
+    v = this.verts[i];
+    if (i >= V)
+      break;
+    vec_copy(v.vectorP, v.vectorNewP);
+  };
 
-  // var new_face;
-  // var e0;
-  // var e1;
-  // var v0,v,v1;
-  // /* 2. Create new faces */
-  // for (var i = 0; i < F; i++) {
-  //   f=this.faces[i]
-  //   for (j = 0; j < f.vs.length; j++) {
-  //     v0=f.vs[(j - 1 + f.vs.length) % f.vs.length];
-  //     v  = f.vs[j];
-  //     v1 = f.vs[(j + 1) % f.vs.length];
-  //     e0 = this.edges[this.find_edge( v0, v)];
-  //     e1 = this.edges[this.find_edge( v, v1)];
+  var new_face;
+  var e0;
+  var e1;
+  var v0,v,v1;
+  /* 2. Create new faces */
+  for (var i = 0; i < F; i++) {
+    f=this.faces[i]
+    for (j = 0; j < f.vs.length; j++) {
+      v0=f.vs[(j - 1 + f.vs.length) % f.vs.length];
+      v  = f.vs[j];
+      v1 = f.vs[(j + 1) % f.vs.length];
+      e0 = this.edges[this.find_edge( v0, v)];
+      e1 = this.edges[this.find_edge( v, v1)];
       
-  //     new_face=new sdFace();
-  //     new_face.vs.push(e0.evert);
-  //     new_face.vs.push( v);
-  //     new_face.vs.push( e1.evert);
-  //     new_face.vs.push( f.fvert);
-  //     new_face.fvert = -1;
-  //     faces.push(new_face);
-  //   };
-  // };
-  // this.faces=faces;
-  // faces=[];
-  // /* 3. Update edges */
-  // if (!last_iteration) {	/* Skip on last iteration */
-  //   this.update_links();
-  // }
+      new_face=new sdFace();
+      new_face.vs.push(e0.evert);
+      new_face.vs.push( v);
+      new_face.vs.push( e1.evert);
+      new_face.vs.push( f.fvert);
+      new_face.fvert = -1;
+      faces.push(new_face);
+    };
+  };
+  this.faces=faces;
+  faces=[];
+  /* 3. Update edges */
+  if (!last_iteration) {	/* Skip on last iteration */
+    this.update_links();
+  }
  }
 
 

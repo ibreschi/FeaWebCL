@@ -69,7 +69,7 @@ function InitCL() {
 			console.error("Failed to allocate device memory");
 			return null;
 		}
-		
+		console.log(NBODY);
 		bufferSize = NBODY * POS_ATTRIB_SIZE * Float32Array.BYTES_PER_ELEMENT;
 		// Create CL working buffers (will be copied to current buffers after computation)
 		//
@@ -129,8 +129,7 @@ function InitCL() {
 
 		globalWorkSize[0] = NBODY;   
 		localWorkSize[0] = Math.min(workGroupSize, NBODY);
-		localWorkSize[0]=1;
-
+		console.log(globalWorkSize,localWorkSize);
 		
 		queue.finish(GetNullResults, 0);
 	}

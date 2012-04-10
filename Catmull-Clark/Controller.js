@@ -90,19 +90,19 @@ Controller.prototype.add_obj = function(file,nr_levels){
 
 Controller.prototype.InitModels= function(){
   console.log("Adding a Cube");
-  this.add_obj("objs/cube.obj",5);
+  this.add_obj("objs/cube.obj",2);
   console.log("Cube added");
 
-  console.log("Adding a Tetrahedron");
-  this.add_obj("objs/tetra.obj",5);
-  console.log("Tetrahedron added");
+  // console.log("Adding a Tetrahedron");
+  // this.add_obj("objs/tetra.obj",5);
+  // console.log("Tetrahedron added");
 
-  console.log("Adding a Bigguy");
-  this.add_obj("objs/bigguy.obj",3);
-  console.log("Bigguy added");
-  console.log("Adding a Monsterfrog");
-  this.add_obj("objs/monsterfrog.obj",3);
-  console.log("Monsterfrog added");
+  // console.log("Adding a Bigguy");
+  // this.add_obj("objs/bigguy.obj",3);
+  // console.log("Bigguy added");
+  // console.log("Adding a Monsterfrog");
+  // this.add_obj("objs/monsterfrog.obj",3);
+  // console.log("Monsterfrog added");
 
 
   // others add 
