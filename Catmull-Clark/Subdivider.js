@@ -99,7 +99,6 @@ Subdivider.prototype.init = function(mesh){
 			this.faces[k].vs.push(vidx);
 		}
 	}
-  console.log(this);
 	/* Create edges */
 	this.update_links();
 }
@@ -152,6 +151,7 @@ Subdivider.prototype.find_edge= function(v0, v1){
   for (var i = 0; i < v.edges.length; i++) {
     ei =v.edges[i];
     e = this.edges[ei];
+
    if ((e.v0 == v0 && e.v1 == v1) ||  (e.v0 == v1 && e.v1 == v0))
      return ei;
   };
@@ -199,22 +199,18 @@ Subdivider.prototype.do_iteration= function(last_iteration){
       vec_mul(p, (1.0 / len), p);
       face.fvert = this.add_vert(p);
     };
-  console.log(this);
-
-  // /* Create edge vertices */
-  // for (var i = 0; i < E; i++) {
-  //   p=[0,0,0];
-  //   e = this.edges[i];
-
-  //   vec_add(p, p, this.verts[e.v0].vectorP);
-  //   vec_add(p, p, this.verts[e.v1].vectorP);
-  //   vec_add(p, p, this.verts[this.faces[e.f0].fvert].vectorP);
-  //   vec_add(p, p, this.verts[this.faces[e.f1].fvert].vectorP);
-  //   vec_mul(p, 0.25, p);
-  //   e.evert = this.add_vert(p);
-    
-
-  // };
+  /* Create edge vertices */
+  for (var i = 0; i < E; i++) {
+    p=[0,0,0];
+    e = this.edges[i];
+    vec_add(p, p, this.verts[e.v0].vectorP);
+    vec_add(p, p, this.verts[e.v1].vectorP);
+    vec_add(p, p, this.verts[this.faces[e.f0].fvert].vectorP);
+    vec_add(p, p, this.verts[this.faces[e.f1].fvert].vectorP);
+    vec_mul(p, 0.25, p);
+    e.evert = this.add_vert(p);
+    console.log(e.evert);
+  };
 
   // var n,appog,z;
   // /* Move old vertices */
@@ -315,4 +311,9 @@ Subdivider.prototype.convert=function(){
 
 
 })(this);
+
+
+
+
+
 

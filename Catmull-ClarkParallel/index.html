@@ -69,32 +69,27 @@ __kernel void genEdgePoints(
 
 	unsigned int gid = get_global_id(0);	
 
-	int eV0 = (int) (edgesv0[gid]);
-	int eV1 = (int) (edgesv1[gid]);
-	int eF0 = (int) (edgesf0[gid]);
-	int eF1 = (int) (edgesf1[gid]);
-
+	int eV0 = (int) edgesv0[gid];
+	int eV1 = (int) edgesv1[gid];
+	int eF0 = (int) edgesf0[gid];
+	int eF1 = (int) edgesf1[gid];
 
 	float3 p = (float3) (0.0f, 0.0f, 0.0f);
-	float3 vP0 = (float3) (verts[eV0], verts[eV0+1], verts[eV0+2]);
-	float3 vP1 = (float3) (verts[eV1], verts[eV1+1], verts[eV1+2]);
-	float3 vP2 = (float3) (verts[facesFvert[eF0]], verts[facesFvert[eF0]+1], verts[facesFvert[eF0]+2]);
-	float3 vP3 = (float3) (verts[facesFvert[eF1]], verts[facesFvert[eF1]+1], verts[facesFvert[eF1]+2]);
+	float3 vP0 = (float3) (verts[3*eV0], verts[(3*eV0)+1], verts[(3*eV0)+2]);
+	float3 vP1 = (float3) (verts[3*eV1], verts[(3*eV1)+1], verts[(3*eV1)+2]);
+	float3 vP2 = (float3) (verts[3*facesFvert[eF0]], verts[3*facesFvert[eF0]+1], verts[3*facesFvert[eF0]+2]);
+	float3 vP3 = (float3) (verts[3*facesFvert[eF1]], verts[3*facesFvert[eF1]+1], verts[3*facesFvert[eF1]+2]);
     
 
     p=SumVectorF(p,vP0);
-    p=SumVectorF(p,vP1);
-    p=SumVectorF(p,vP2);
-    p=SumVectorF(p,vP3);
- 	p=ProdVectorF((0.25f), p);
- 	outPoints[gid + 0] = p.x;
-	outPoints[gid + 1] = p.y;
-	outPoints[gid + 2] = p.z;
-	outEdgesEvert[gid] = gid;
-
-    //face.fvert = this.add_vert(p);
-
-
+ 	p=SumVectorF(p,vP1);
+	p=SumVectorF(p,vP2);
+	p=SumVectorF(p,vP3);
+	p=ProdVectorF((0.25f), p);
+	outPoints[3*gid + 0] = p.x;
+	outPoints[3*gid + 1] = p.y;
+	outPoints[3*gid + 2] = p.z;
+	outEdgesEvert[gid] = get_global_size(0)+gid+2;
 }
 </script>
 

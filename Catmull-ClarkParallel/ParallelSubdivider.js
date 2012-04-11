@@ -36,13 +36,16 @@ exports.ParallelSubdivider = function (){
   this.genVertexPoints = null;
 
   // Face Datas
-  this.facesVs= [];   // 
-  this.facesFvert=[];  //
+  this.facesVs= null;   // 
+  this.facesFvert=null;  //
 
 
 
   // vertices data
   this.verts= null;
+  this.newVerts= null;
+  this.vertsEdges= null;
+  this.vertsFaces= null;
 
 
   //Edge data 
@@ -70,7 +73,75 @@ ParallelSubdivider.prototype.initParallel = function (){
    
 
 }
+ParallelSubdivider.prototype.update_links = function(){
+  // var Sub_vertices = [];
+  // var Sub_faces= [];
+  // var subFace;
+  // var edge;
 
+  //console.log(this.facesVs);
+  // for (var i = 0; i < this.verts.length/3; i++) {
+  //   this.verts[i].edges=[];
+  //   this.verts[i].faces =[];
+  // };
+  var len = 4;
+  var vertsEdges= [];
+  var vertsFaces= [];
+  for (var i = 0; i < this.verts.length/3; i++) {
+    vertsEdges[i] =[];
+    vertsFaces[i] =[];
+  };
+
+  var edgesf0 = [];
+  var edgesf1= [];
+  var edgesv0 = [];
+  var edgesv1= [];
+  var edgesevert= [];
+  for (var i = 0; i < this.facesVs.length ; i++){
+      var v0, v1, ei;
+      v0 = this.facesVs[i];
+      if((i+1)%len===0)
+        v1 = this.facesVs[i-3];
+      else 
+        v1 = this.facesVs[i+1];
+      vertsFaces[v0].push(Math.floor(i/4));
+      ei = this.find_edge(vertsEdges,edgesv0,edgesv1,v0, v1);
+      if (ei == -1) {
+        edgesv0.push(v0);
+        edgesv1.push(v1);
+        edgesf0.push(Math.floor(i/4)); 
+        edgesf1.push(-1);
+        edgesevert.push(-1);
+        ei = edgesevert.length - 1;
+        vertsEdges[v0].push(ei);
+        vertsEdges[v1].push(ei);
+        } else {
+          edgesf1[ei]=Math.floor(i/4);
+        }
+  }
+  // ok vertsEdges
+  // ok vertsFaces
+
+  this.edgesv0 = new Int32Array(edgesv0);
+  this.edgesv1 = new Int32Array(edgesv1);
+  this.edgesf0 = new Int32Array(edgesf0);
+  this.edgesf1 = new Int32Array(edgesf1);
+  this.edgesEvert = new Int32Array(edgesevert);
+
+}
+
+ParallelSubdivider.prototype.find_edge= function(vertsEdges,edgesv0,edgesv1,v0, v1){
+ var ei ,v , v_0,v_1;
+  v=vertsEdges[v0];
+  for (var i = 0; i < v.length; i++) {
+    ei =v[i];
+    v_0 = edgesv0[ei];
+    v_1 = edgesv1[ei];
+    if ((v_0 == v0 && v_1 == v1) ||  (v_0 == v1 && v_1 == v0))
+      return ei;
+  };
+ return -1;
+}
 
 ParallelSubdivider.prototype.init = function(mesh){
   var i, j, nr_verts, nr_faces;
@@ -85,13 +156,6 @@ ParallelSubdivider.prototype.init = function(mesh){
   /* Create vertices */
   
   this.verts = new Float32Array(mesh.vertexbuf);
- // nr_verts = mesh.countVertex();
-
-  // for (var i = 0; i < nr_verts; i++) {
-  //   this.verts.push(new sdVertex());
-  //   this.verts[i].vectorP=[vbuf[3*i],vbuf[3*i+1],vbuf[3*i+2]];
-  //   this.verts.push(vbuf[3*i])
-  // };
   var facesVs= [];
   var facesFvert= [];
   /* Create faces */
@@ -108,8 +172,8 @@ ParallelSubdivider.prototype.init = function(mesh){
   this.facesVs = new Int32Array(facesVs);
   this.facesFvert = new Int32Array(facesFvert);
 
-  // /* Create edges */
-  // this.update_links();
+  /* Create edges */
+  this.update_links();
 }
 
 
@@ -124,13 +188,13 @@ ParallelSubdivider.prototype.do_iteration= function(last_iteration){
   this.verts= Float32Concat(this.verts,ris[0]);
   this.facesFvert = ris[1];
   // output ok!!
-  //console.log(this.verts ,this.facesFvert);
+  // console.log(this.verts ,this.facesFvert);
 
-  // EdgePoint Procedure
-  this.genEdgePoints.SetData([this.facesVs,this.facesFvert,this.verts]);
-  // this.genEdgePoints.RunProgram();
-  // ris =this.genEdgePoints.GetResults();
-  // console.log(ris);
+  // EdgePoint Procedurethis.edgesv0 = new Int32Array(edgesv0);
+  this.genEdgePoints.SetData([this.facesFvert,this.verts,this.edgesv0, this.edgesv1, this.edgesf0, this.edgesf1]);
+  this.genEdgePoints.RunProgram();
+  ris =this.genEdgePoints.GetResults();
+  console.log(ris);
   
   // // VertexPoint Procedure
   // this.genVertexPoints.SetData([this.facesVs,this.facesFvert,this.verts]);

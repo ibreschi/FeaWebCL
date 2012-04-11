@@ -16,20 +16,27 @@ exports.GenEdgePoints = function (){
   this.workGroupSize;
 
   // Input Data
-  this.facesVs;
   this.facesFvert;
   this.verts;
+  this.edgesv0; 
+  this.edgesv1;
+  this.edgesf0;
+  this.edgesf1; 
 
   // CL buffers
-  this.curFacesVs= null;  
-  this.curFacesFvert= null;  
-  this.curVerts= null;  
-  this.outPoints= null;  
-  this.outFacesFvert= null;  
+  this.inFacesFvert= null;  
+  this.inVerts= null;  
+  this.inEdgesv0= null;  
+  this.inEdgesv1= null;  
+  this.inEdgesf0= null;  
+  this.inEdgesf1= null; 
+  this.outEdgesEvert = null;
+  this.outPoints= null;
+
 
   // Output Data
   this.outP;
-  this.outFFvert;
+  this.outEEvert;
 
 
 };
@@ -37,90 +44,103 @@ exports.GenEdgePoints = function (){
 GenEdgePoints.prototype.initProcedure= function(webCLProgram){
   this.cl = webCLProgram.cl;
   this.context=webCLProgram.context;
-  this.queue= webCLProgram.queue;
-  this.kernel= webCLProgram.kernels[0];
-  this.program = webCLProgram.programs[0];
+  this.queue= webCLProgram.getNewQueue();
+  this.kernel= webCLProgram.kernels[1];
+  this.program = webCLProgram.programs[1];
   this.device_id =webCLProgram.device_id;
-  this.globalWorkSize[0] = this.GetWorkGroupSize();
-  this.localWorkSize[0]= 1;
+
 
 }
 
 GenEdgePoints.prototype.SetData =function (args){
-  this.facesVs = new Int32Array(args[0]);
+  this.facesFvert= args[0];
+  this.verts = args[1];
+  this.edgesv0 = args[2];
+  this.edgesv1 = args[3];
+  this.edgesf0 = args[4];
+  this.edgesf1 = args[5];
 
-  this.facesFvert= new Int32Array(args[1]);
-  this.verts = new Float32Array(args[2]);
+  this.workGroupSize=this.GetWorkGroupSize();
+  this.globalWorkSize[0] = this.edgesv0.length ;
+  this.localWorkSize[0]= 1;
+
   var cl = this.cl;
   var context = this.context;
   var queue = this.queue;
-
   try {
     
-    var bufferSize1 = this.facesVs.length * Int32Array.BYTES_PER_ELEMENT;
-    this.curFacesVs = context.createBuffer(cl.MEM_READ_ONLY, bufferSize1, null);
-    if(this.curFacesVs === null) {
+
+    
+    var bufferSize1 = this.facesFvert.length * Int32Array.BYTES_PER_ELEMENT;
+    this.inFacesFvert = context.createBuffer(cl.MEM_READ_ONLY, bufferSize1, null);
+    if(this.inFacesFvert === null) {
       console.error("Failed to allocate device memory");
       return null;
     }
     
-    
-    var bufferSize2 = this.facesFvert.length * Int32Array.BYTES_PER_ELEMENT;
-    this.curFacesFvert = context.createBuffer(cl.MEM_READ_ONLY, bufferSize2, null);
-    if(this.curFacesFvert === null) {
-      console.error("Failed to allocate device memory");
-      return null;
-    }
-    
-    var bufferSize3 = this.verts.length * Float32Array.BYTES_PER_ELEMENT;
-    
-    this.curVerts = context.createBuffer(cl.MEM_READ_ONLY, bufferSize3, null);
-    if(this.curVerts === null) {
+    var bufferSize2 = this.verts.length * Float32Array.BYTES_PER_ELEMENT;
+   
+    this.inVerts = context.createBuffer(cl.MEM_READ_ONLY, bufferSize2, null);
+    if(this.inVerts === null) {
       console.error("Failed to allocate device memory");
       return null;
     }
 
-    queue.enqueueWriteBuffer(this.curFacesVs, true, 0, bufferSize1, this.facesVs, null);
-    queue.enqueueWriteBuffer(this.curFacesFvert, true, 0, bufferSize2, this.facesFvert, null);
-    queue.enqueueWriteBuffer(this.curVerts, true, 0, bufferSize3, this.verts, null);
+
+    var bufferSize3 = this.edgesv0.length * Int32Array.BYTES_PER_ELEMENT;
+    this.inEdgesv0 = context.createBuffer(cl.MEM_READ_ONLY, bufferSize3, null);
+    if(this.inEdgesv0 === null) {
+      console.error("Failed to allocate device memory");
+      return null;
+    }
+    
+    this.inEdgesv1 = context.createBuffer(cl.MEM_READ_ONLY, bufferSize3, null);
+    if(this.inEdgesv1 === null) {
+      console.error("Failed to allocate device memory");
+      return null;
+    }
+    
+    this.inEdgesf0 = context.createBuffer(cl.MEM_READ_ONLY, bufferSize3, null);
+    if(this.inEdgesf0 === null) {
+      console.error("Failed to allocate device memory");
+      return null;
+    }
+    
+    this.inEdgesf1 = context.createBuffer(cl.MEM_READ_ONLY, bufferSize3, null);
+    if(this.inEdgesf1 === null) {
+      console.error("Failed to allocate device memory");
+      return null;
+    }
+
+    queue.enqueueWriteBuffer(this.inFacesFvert, true, 0, bufferSize1, this.facesFvert, null);
+    queue.enqueueWriteBuffer(this.inVerts, true, 0, bufferSize2, this.verts, null);
+    queue.enqueueWriteBuffer(this.inEdgesv0, true, 0, bufferSize3, this.edgesv0, null);
+    queue.enqueueWriteBuffer(this.inEdgesv1, true, 0, bufferSize3, this.edgesv1, null);
+    queue.enqueueWriteBuffer(this.inEdgesf0, true, 0, bufferSize3, this.edgesf0, null);
+    queue.enqueueWriteBuffer(this.inEdgesf1, true, 0, bufferSize3, this.edgesf1, null);
 
 
+    this.outEdgesEvert = context.createBuffer(cl.MEM_READ_ONLY, bufferSize3, null);
+    if(this.outEdgesEvert === null) {
+      console.error("Failed to allocate device memory");
+      return null;
+    }
 
-    this.outPoints = context.createBuffer(cl.MEM_WRITE_ONLY, bufferSize3, null);
+    var bufferSize4 = this.edgesv0.length*3 *Float32Array.BYTES_PER_ELEMENT;
+    // this buffer contains the new facepoints that are one for each old face
+    this.outPoints = context.createBuffer(cl.MEM_WRITE_ONLY, bufferSize4, null);
     if(this.outPoints === null) {
       console.error("Failed to allocate device memory");
       return null;
     }
 
-    this.outFacesFvert = context.createBuffer(cl.MEM_WRITE_ONLY, bufferSize1, null);
-    if(this.outFacesFvert === null) {
-      console.error("Failed to allocate device memory");
-      return null;
-    }
-    // nxtVelBuffer = context.createBuffer(cl.MEM_READ_ONLY, bufferSize, null);
-    // if(nxtPosBuffer === null) {
-    //   console.error("Failed to allocate device memory");
-    //   return null;
-    // }
-    
-    // if(TEST==0){
+    this.outP= new Float32Array(this.edgesv0.length*3);
+    this.outEEvert= new Int32Array(this.edgesv0.length);
 
-    //  console.log("--Test1--")
-    //  cpBufz1 = new Float32Array(bufferSize/4.0);
-    //  queue.enqueueReadBuffer(curPosBuffer,true,0,bufferSize,cpBufz1,null)
-    //  console.log("cpBufz1",cpBufz1[0],cpBufz1[1],cpBufz1[2],cpBufz1[3]);
-      
-    //  cvBufz1 = new Float32Array(bufferSize/4.0);
-    //  queue.enqueueReadBuffer(curVelBuffer,true,0,bufferSize,cvBufz1,null)
-    //  console.log("cvBufz1",cvBufz1[0],cvBufz1[1],cvBufz1[2],cvBufz1[3]);
-    //  console.log("----")
+    console.log(this);
 
-    //  TEST=1;
-    // }
-
-    this.outP= new Float32Array(this.verts.length);
-    this.outFFvert= new Int32Array(this.facesVs.length);
     queue.finish(function () { }, null);
+
   }
   catch (e)
   {
@@ -137,19 +157,24 @@ GenEdgePoints.prototype.RunProgram =function (){
   try {
     if(cl === null)
       return;
-    kernel.setKernelArgGlobal(0, this.curFacesVs);
-    kernel.setKernelArgGlobal(1, this.curFacesFvert);
-    kernel.setKernelArgGlobal(2, this.curVerts);
-    kernel.setKernelArgGlobal(3, this.outPoints);
-    kernel.setKernelArgGlobal(4, this.outFacesFvert);
-    kernel.setKernelArg(5, 4, cl.KERNEL_ARG_INT);
+    var len = 4;
+    kernel.setKernelArgGlobal(0, this.inFacesFvert);
+    kernel.setKernelArgGlobal(1, this.inVerts);
+    kernel.setKernelArgGlobal(2, this.inEdgesv0);
+    kernel.setKernelArgGlobal(3, this.inEdgesv1);
+    kernel.setKernelArgGlobal(4, this.inEdgesf0);
+    kernel.setKernelArgGlobal(5, this.inEdgesf1);
+    kernel.setKernelArgGlobal(6, this.outPoints);
+    kernel.setKernelArgGlobal(7, this.outEdgesEvert);
+
     queue.enqueueNDRangeKernel(kernel, 1, 0, this.globalWorkSize, this.localWorkSize, null);
     
     var that = this;
     queue.finish(function () { 
-      var bufferSize = that.verts.length * Float32Array.BYTES_PER_ELEMENT;
+      var bufferSize = (that.edgesv0.length*3)*Float32Array.BYTES_PER_ELEMENT;
       that.queue.enqueueReadBuffer(that.outPoints, true, 0, bufferSize, that.outP, null);
-      that.queue.enqueueReadBuffer(that.outFacesFvert, true, 0, bufferSize, that.outFFvert, null);
+      var bufferSize2 = that.edgesv0.length*Int32Array.BYTES_PER_ELEMENT;
+      that.queue.enqueueReadBuffer(that.outEdgesEvert , true, 0, bufferSize2, that.outEEvert, null);
     },null);
   }
   catch (e)
@@ -162,7 +187,7 @@ GenEdgePoints.prototype.RunProgram =function (){
 
 GenEdgePoints.prototype.GetResults= function()
 {  
-  return [this.outP, this.outFFvert];
+  return [this.outP, this.outEEvert];
 }
 GenEdgePoints.prototype.GetWorkGroupSize= function() {
     try {

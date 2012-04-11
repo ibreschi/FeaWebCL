@@ -61,6 +61,16 @@ WebCLController.prototype.InitWebCL =function (){
   }
 }
 
+WebCLController.prototype.getNewQueue = function(){
+  try {
+    return this.context.createCommandQueue(this.device_id, null);
+  }
+  catch (e)
+  {
+    console.error("Failed gettin a new Queue; Message: "+ e.message );
+  }
+}
+
 WebCLController.prototype.getKernel = function(id){
   var kernelScript = document.getElementById(id);
   if(kernelScript === null || kernelScript.type !== "x-kernel")
