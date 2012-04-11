@@ -194,9 +194,10 @@ ParallelSubdivider.prototype.do_iteration= function(last_iteration){
   this.genEdgePoints.SetData([this.facesFvert,this.verts,this.edgesv0, this.edgesv1, this.edgesf0, this.edgesf1]);
   this.genEdgePoints.RunProgram();
   ris =this.genEdgePoints.GetResults();
-  console.log(ris);
+  this.verts= Float32Concat(this.verts,ris[0]);
+  this.edgesEvert=ris[1];
   
-  // // VertexPoint Procedure
+  // VertexPoint Procedure
   // this.genVertexPoints.SetData([this.facesVs,this.facesFvert,this.verts]);
   // this.genVertexPoints.RunProgram();
   // ris =this.genVertexPoints.GetResults();

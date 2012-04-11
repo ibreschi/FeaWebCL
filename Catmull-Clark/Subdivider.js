@@ -209,9 +209,9 @@ Subdivider.prototype.do_iteration= function(last_iteration){
     vec_add(p, p, this.verts[this.faces[e.f1].fvert].vectorP);
     vec_mul(p, 0.25, p);
     e.evert = this.add_vert(p);
-    console.log(e.evert);
   };
 
+  console.log(this);
   // var n,appog,z;
   // /* Move old vertices */
   // for (var i = 0; i < V; i++) {
