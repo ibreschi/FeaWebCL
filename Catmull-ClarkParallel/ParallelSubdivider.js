@@ -43,9 +43,14 @@ exports.ParallelSubdivider = function (){
 
   // vertices data
   this.verts= null;
+  this.newVerts1= null;
+  this.newVerts2=null;
+
   this.newVerts= null;
   this.vertsEdges= null;
   this.vertsFaces= null;
+  this.vELen =0;
+  this.vFLen = 0; 
 
 
   //Edge data 
@@ -74,16 +79,6 @@ ParallelSubdivider.prototype.initParallel = function (){
 
 }
 ParallelSubdivider.prototype.update_links = function(){
-  // var Sub_vertices = [];
-  // var Sub_faces= [];
-  // var subFace;
-  // var edge;
-
-  //console.log(this.facesVs);
-  // for (var i = 0; i < this.verts.length/3; i++) {
-  //   this.verts[i].edges=[];
-  //   this.verts[i].faces =[];
-  // };
   var len = 4;
   var vertsEdges= [];
   var vertsFaces= [];
@@ -121,6 +116,10 @@ ParallelSubdivider.prototype.update_links = function(){
   }
   // ok vertsEdges
   // ok vertsFaces
+  this.vELen = vertsEdges[0].length;
+  this.vFLen = vertsFaces[0].length;
+  this.vertsEdges=new Int32Array(flatList(vertsEdges));
+  this.vertsFaces=new Int32Array(flatList(vertsFaces)); 
 
   this.edgesv0 = new Int32Array(edgesv0);
   this.edgesv1 = new Int32Array(edgesv1);
@@ -185,23 +184,24 @@ ParallelSubdivider.prototype.do_iteration= function(last_iteration){
   this.genFacePoints.SetData([this.facesVs,this.facesFvert,this.verts]);
   this.genFacePoints.RunProgram();
   var ris =this.genFacePoints.GetResults();
-  this.verts= Float32Concat(this.verts,ris[0]);
+  this.newVerts1= ris[0];
   this.facesFvert = ris[1];
-  // output ok!!
-  // console.log(this.verts ,this.facesFvert);
+  this.verts= Float32Concat(this.verts,this.newVerts1);
 
-  // EdgePoint Procedurethis.edgesv0 = new Int32Array(edgesv0);
+  // EdgePoint Procedure
   this.genEdgePoints.SetData([this.facesFvert,this.verts,this.edgesv0, this.edgesv1, this.edgesf0, this.edgesf1]);
   this.genEdgePoints.RunProgram();
   ris =this.genEdgePoints.GetResults();
-  this.verts= Float32Concat(this.verts,ris[0]);
+  this.newVerts2= ris[0];
   this.edgesEvert=ris[1];
-  
+  this.verts= Float32Concat(this.verts,this.newVerts2);
+
   // VertexPoint Procedure
-  // this.genVertexPoints.SetData([this.facesVs,this.facesFvert,this.verts]);
-  // this.genVertexPoints.RunProgram();
-  // ris =this.genVertexPoints.GetResults();
-  // console.log(ris);
+  this.genVertexPoints.SetData([this.facesFvert,this.verts, this.vertsFaces ,this.vertsEdges,this.edgesv0, this.edgesv1, this.vELen ,this.vFLen]);
+  this.genVertexPoints.RunProgram();
+  ris =this.genVertexPoints.GetResults();
+  this.verts =ris[0];
+
 }
 
 
@@ -242,6 +242,11 @@ function Float32Concat(first, second)
     result.set(second, firstLength);
 
     return result;
+}
+function flatList(listOfLists){
+
+  return listOfLists.reduce(function(previousValue, currentValue, index, array){  
+  return previousValue.concat( currentValue);}, [])
 }
 
 

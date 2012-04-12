@@ -68,6 +68,7 @@ GenEdgePoints.prototype.SetData =function (args){
   var cl = this.cl;
   var context = this.context;
   var queue = this.queue;
+
   try {
     
 
@@ -138,7 +139,6 @@ GenEdgePoints.prototype.SetData =function (args){
     this.outP= new Float32Array(this.edgesv0.length*3);
     this.outEEvert= new Int32Array(this.edgesv0.length);
 
-    console.log(this);
 
     queue.finish(function () { }, null);
 

@@ -188,21 +188,22 @@ Subdivider.prototype.do_iteration= function(last_iteration){
 
 	/* 1. Update vertices */
 	/* Create face vertices */
-    var face ,p,len;
-    for (var i = 0; i < F; i++) {
-      face =this.faces[i];
-      p= [0,0,0];
-      len = face.vs.length;
-      for (var j = 0; j < len; j++) {
-        vec_add(p,p,this.verts[face.vs[j]].vectorP);
-      };
-      vec_mul(p, (1.0 / len), p);
-      face.fvert = this.add_vert(p);
+  var face ,p,len;
+  for (var i = 0; i < F; i++) {
+    face =this.faces[i];
+    p= [0,0,0];
+    len = face.vs.length;
+    for (var j = 0; j < len; j++) {
+      vec_add(p,p,this.verts[face.vs[j]].vectorP);
     };
+    vec_mul(p, (1.0 / len), p);
+    face.fvert = this.add_vert(p);
+  };
   /* Create edge vertices */
   for (var i = 0; i < E; i++) {
     p=[0,0,0];
     e = this.edges[i];
+
     vec_add(p, p, this.verts[e.v0].vectorP);
     vec_add(p, p, this.verts[e.v1].vectorP);
     vec_add(p, p, this.verts[this.faces[e.f0].fvert].vectorP);
@@ -210,40 +211,39 @@ Subdivider.prototype.do_iteration= function(last_iteration){
     vec_mul(p, 0.25, p);
     e.evert = this.add_vert(p);
   };
+  var n,appog,z;
+  /* Move old vertices */
+  // it moves and works only  with the old vertices
 
-  console.log(this);
-  // var n,appog,z;
-  // /* Move old vertices */
-  // for (var i = 0; i < V; i++) {
-  //   v =this.verts[i];
+  for (var i = 0; i < V; i++) {
+    v = this.verts[i];
+    n = v.faces.length;
+    appog=(n - 2) / n;
+    vec_copy(v.vectorNewP, v.vectorP);
+    vec_mul(v.vectorNewP, appog, v.vectorNewP);
+    p= [0,0,0];
+    for (var k = 0; k < v.faces.length; k++) {
+      z=v.faces[k].fvert ;
+      vec_add(p, p, this.verts[z].vectorP);
+    };
+    vec_mad(v.vectorNewP, 1.0 / (n * n), p);
 
-  //   if(i>=V)
-  //     break;
-  //   n= v.faces.length;
-  //   vec_copy(v.vectorNewP, v.vectorP);
-  //   appog=(n - 2) / n;
-  //   vec_mul(v.vectorNewP, appog, v.vectorNewP);
-  //   p= [0,0,0];
-  //   for (var k = 0; k < v.faces.length; k++) {
-  //     z=v.faces[k].fvert ;
-  //     vec_add(p, p, this.verts[z].vectorP);
-  //   };
-  //   vec_mad(v.vectorNewP, 1.0 / (n * n), p);
-  //   p= [0,0,0];
-  //   for (var t = 0; t < v.edges.length; t++) {
-  //     ei=v.edges[t];
-  //     vec_add(p, p, this.edge_other(this.edges[ei], i).vectorP);
-  //   };
-  //   vec_mad(v.vectorNewP, 1.0 / (n * n), p);
-  // };
+    p= [0,0,0];
 
-  // for (var i = 0; i < V; i++) {
-  //   v = this.verts[i];
-  //   if (i >= V)
-  //     break;
-  //   vec_copy(v.vectorP, v.vectorNewP);
-  // };
+    for (var t = 0; t < v.edges.length; t++) {
+      ei=v.edges[t];
+      vec_add(p, p, this.edge_other(this.edges[ei], i).vectorP);
+    };
+    vec_mad(v.vectorNewP, 1.0 / (n * n), p);
+  };
 
+  for (var i = 0; i < V; i++) {
+    v = this.verts[i];
+     vec_copy(v.vectorP, v.vectorNewP);
+  };
+  this.verts.forEach(function(item, index, array){   
+   console.log(item.vectorP);
+  });
   // var new_face;
   // var e0;
   // var e1;
@@ -285,9 +285,7 @@ Subdivider.prototype.add_vert= function(p){
 }
 
 Subdivider.prototype.edge_other = function (e,v) {
-	var vi;
-  vi =this.verts[v];
-	return this.verts[e.v0 == vi ? e.v1 : e.v0];
+	return this.verts[e.v0 == v ? e.v1 : e.v0];
 }
 
 
@@ -311,7 +309,6 @@ Subdivider.prototype.convert=function(){
 
 
 })(this);
-
 
 
 

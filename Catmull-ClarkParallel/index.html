@@ -31,7 +31,7 @@ __kernel void genFacePoints(
 	int4 vertices = (int4) (facesVs[4*gid],facesVs[4*gid+1],facesVs[4*gid+2],facesVs[4*gid+3]);
 	float3 point;
 	int j;
-	for (j = 0; j < len; j++) {
+	for (j = 0; j < len; ++j) {
 		int vn = (int)vertices[j];
 		point.xyz = (float3) (verts[3*vn], verts[(3*vn)+1], verts[(3*vn)+2]);
         p=SumVectorF(p,point);
@@ -100,36 +100,61 @@ float3 SumVectorF(float3 a, float3 b)
   	{	
     	return a+b;
   	}
-float3 ProdVectorF(float3 a, float3 b)
+float3 MedVectorF(float3 a, float f, float3 b)
 	{
-		return a*b;
+		return a + (f*b);
 	}
 
 __kernel void genVertexPoints(
-	__global int * facesVs,
 	__global int * facesFvert,
 	__global float * verts,
+	__global int * vertsFace,
+	__global int * vertsEdges,
+	__global int * edgesv0,
+	__global int * edgesv1,
 	__global float * outPoints,
-	// int * OutFacesFvert,
-		int len)
+		int len,
+		int len2)
 	{
 	unsigned int gid = get_global_id(0);	
+
+	float3 point = (float3) (verts[3*gid], verts[(3*gid)+1], verts[(3*gid)+2]);
+ 	float app = (float)((len -2.0f)/ len);
+	float3 newVecP = app*point.xyz;
 	float3 p= (float3) (0.0f, 0.0f, 0.0f);
-	int4 vectors = (int4) (facesVs[gid],facesVs[gid]+1,facesVs[gid]+2,facesVs[gid]+3);
-	float3 point;
 	int j;
-	for (j = 0; j < len; j++) {
-		int vn = (int)vectors[j];
-		point = (float3) (verts[vn], verts[vn+1], verts[vn+2]);
-        p=SumVectorF(p,point);
+	for (j =0 ; j < len; j++) {
+		int z =(int)facesFvert[vertsFace[(3*gid)+j]];
+		float3 vP=(float3) (verts[3*z], verts[(3*z)+1], verts[(3*z)+2]);
+		p=SumVectorF(p,vP);
 	}
- 	p=ProdVectorF((1.0f / len), p);
- 	outPoints[gid + 0] = p.x;
-	outPoints[gid + 1] = p.y;
-	outPoints[gid + 2] = p.z;
 
+	newVecP = MedVectorF(newVecP, 1.0f / (len * len), p);
+	outPoints[3*gid + 0] = newVecP.x;
+	outPoints[3*gid + 1] = newVecP.y;
+	outPoints[3*gid + 2] = newVecP.z;
 
+	p.xyz = (float3) (0.0f, 0.0f, 0.0f);
 
+	int z ;
+	for (int t = 0; t < len2; t++) {
+		int ei = vertsEdges[(3*gid)+t];
+		if(edgesv0[ei]==(gid)){
+			z = edgesv1[ei];
+		}
+		else {
+			z = edgesv0[ei];
+		}
+		float3 vP = (float3) (verts[3*z], verts[(3*z)+1], verts[(3*z)+2]);
+		p=SumVectorF(p,vP);
+	}
+
+	newVecP = MedVectorF(newVecP, 1.0f / (len * len), p);
+	verts[3*gid + 0] = newVecP.x;
+	verts[3*gid + 1] = newVecP.y;
+	verts[3*gid + 2] = newVecP.z;
+
+	
 }
 </script>
 

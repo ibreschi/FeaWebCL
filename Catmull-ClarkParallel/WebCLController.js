@@ -122,10 +122,10 @@ WebCLController.prototype.getKernels = function (){
   genEdgePoints.initProcedure(this);
   list.push(genEdgePoints);
 
-  // var genVertexPoints = new GenVertexPoints();
-  // this.GetProgram("genVertexPoints");
-  // genVertexPoints.initProcedure(this);
-  // list.push(genVertexPoints);
+  var genVertexPoints = new GenVertexPoints();
+  this.GetProgram("genVertexPoints");
+  genVertexPoints.initProcedure(this);
+  list.push(genVertexPoints);
   return list;
 }
 
