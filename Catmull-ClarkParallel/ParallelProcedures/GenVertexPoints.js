@@ -63,10 +63,11 @@ GenVertexPoints.prototype.SetData =function (args){
   this.edgesv1=new Int32Array(args[5]);
   this.vELen =args[6];
   this.vFLen =args[7];
-
-  console.log(this.vertsEdges ,this.edgesv0);
+  
   this.workGroupSize=this.GetWorkGroupSize();
+
   this.globalWorkSize[0] = this.vertsFaces.length/this.vFLen ;
+  console.log("ciao ", this.globalWorkSize[0], this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));     
   this.localWorkSize[0]= 1;
   
   var cl = this.cl;
@@ -171,7 +172,7 @@ GenVertexPoints.prototype.RunProgram =function (){
   }
   catch (e)
   {
-    console.error("Failure  ; Message: "+ e.message);
+    console.error("Failure running program; Message: "+ e.message);
   }
 
 }

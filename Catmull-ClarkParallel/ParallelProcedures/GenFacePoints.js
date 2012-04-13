@@ -50,6 +50,7 @@ GenFacePoints.prototype.SetData =function (args){
   this.verts = args[2];
   this.workGroupSize=this.GetWorkGroupSize();
   this.globalWorkSize[0] = this.facesFvert.length ;
+  console.log("miao ",this.globalWorkSize[0], this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));
   this.localWorkSize[0]= 1;
 
   var cl = this.cl;
@@ -150,7 +151,7 @@ GenFacePoints.prototype.RunProgram =function (){
   }
   catch (e)
   {
-    console.error("Failure  ; Message: "+ e.message);
+    console.error("Failure running program; Message: "+ e.message);
   }
 
 }

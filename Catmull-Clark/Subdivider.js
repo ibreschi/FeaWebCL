@@ -49,8 +49,7 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
     this.do_iteration( i==nr_levels - 1 );
     levels[i] = this.convert();
 	}
-
-	//this.destroy();
+	this.destroy();
 	return levels;
 }
 
@@ -151,7 +150,6 @@ Subdivider.prototype.find_edge= function(v0, v1){
   for (var i = 0; i < v.edges.length; i++) {
     ei =v.edges[i];
     e = this.edges[ei];
-
    if ((e.v0 == v0 && e.v1 == v1) ||  (e.v0 == v1 && e.v1 == v0))
      return ei;
   };
@@ -167,25 +165,10 @@ Subdivider.prototype.do_iteration= function(last_iteration){
   var fi;
   var ei= [];
 
-	/* V' = V + F + E
-	 * F' = Sum_i=0^F(f_i), (F' = 4F, when quad-mesh)
-	 * E' = 2E + F'
-	 */
   var V,F,E,Fn;
 	V = this.verts.length;
 	F = this.faces.length;
 	E = this.edges.length;
-  // if (this.first_iteration) {
- 	//   Fn = 0;
-  //   for (var i = 0; i < F; i++) {
-  //     Fn += this.faces[i].vs.length;
-  //   };
-  //   this.first_iteration=0;
-  // }else {
-  //   /* After the first iteration all faces are quads */
-  //   Fn = 4 * F;
-  // }
-
 	/* 1. Update vertices */
 	/* Create face vertices */
   var face ,p,len;
@@ -241,38 +224,43 @@ Subdivider.prototype.do_iteration= function(last_iteration){
     v = this.verts[i];
      vec_copy(v.vectorP, v.vectorNewP);
   };
-  this.verts.forEach(function(item, index, array){   
-   console.log(item.vectorP);
-  });
-  // var new_face;
-  // var e0;
-  // var e1;
-  // var v0,v,v1;
-  // /* 2. Create new faces */
-  // for (var i = 0; i < F; i++) {
-  //   f=this.faces[i]
-  //   for (j = 0; j < f.vs.length; j++) {
-  //     v0=f.vs[(j - 1 + f.vs.length) % f.vs.length];
-  //     v  = f.vs[j];
-  //     v1 = f.vs[(j + 1) % f.vs.length];
-  //     e0 = this.edges[this.find_edge( v0, v)];
-  //     e1 = this.edges[this.find_edge( v, v1)];
+  var new_face;
+  var e0;
+  var e1;
+  var v0,v,v1;
+
+  /* 2. Create new faces */
+  for (var i = 0; i < F; i++) {
+    f=this.faces[i];
+
+    for (j = 0; j < f.vs.length; j++) {
+ 
+      v0=f.vs[(j - 1 + f.vs.length) % f.vs.length];
+
+      v  = f.vs[j];
+
+      v1 = f.vs[(j + 1) % f.vs.length];
+      e0 = this.edges[this.find_edge( v0, v)];
+      e1 = this.edges[this.find_edge( v, v1)];
       
-  //     new_face=new sdFace();
-  //     new_face.vs.push(e0.evert);
-  //     new_face.vs.push( v);
-  //     new_face.vs.push( e1.evert);
-  //     new_face.vs.push( f.fvert);
-  //     new_face.fvert = -1;
-  //     faces.push(new_face);
-  //   };
-  // };
-  // this.faces=faces;
-  // faces=[];
-  // /* 3. Update edges */
-  // if (!last_iteration) {	/* Skip on last iteration */
-  //   this.update_links();
-  // }
+      new_face=new sdFace();
+      new_face.vs.push(e0.evert);
+      new_face.vs.push( v);
+      new_face.vs.push( e1.evert);
+      new_face.vs.push( f.fvert);
+      new_face.fvert = -1;
+      faces.push(new_face);
+    };
+  };
+  this.faces=faces;
+  faces=[];
+
+
+  /* 3. Update edges */
+  if (!last_iteration) {	/* Skip on last iteration */
+     this.update_links();
+  }
+
  }
 
 
@@ -302,7 +290,8 @@ Subdivider.prototype.convert=function(){
       for (var j = 0; j < face.vs.length; j++) {
         mesh.add_index(face.vs[i], -1);
      };
-	}
+	};
+
   mesh.compute_normals();
 	return mesh;
 }

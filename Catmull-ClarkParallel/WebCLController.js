@@ -131,6 +131,15 @@ WebCLController.prototype.getKernels = function (){
 
 
 
+// var cl = new WebCLComputeContext();
+// var platform_ids = cl.getPlatformIDs();
+// var platform_id = platform_ids[0];
+// var device_ids = platform_id.getDeviceIDs(cl.DEVICE_TYPE_GPU);
+// var device_id = device_ids[0];
+// var context = cl.createSharedContext(cl.DEVICE_TYPE_GPU, null, null);
+// var queue = context.createCommandQueue(device_id, null);
+
+
 
 
 })(this);

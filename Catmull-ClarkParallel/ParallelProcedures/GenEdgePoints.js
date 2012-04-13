@@ -63,6 +63,7 @@ GenEdgePoints.prototype.SetData =function (args){
 
   this.workGroupSize=this.GetWorkGroupSize();
   this.globalWorkSize[0] = this.edgesv0.length ;
+  console.log("bau",this.globalWorkSize[0], this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));
   this.localWorkSize[0]= 1;
 
   var cl = this.cl;
@@ -70,8 +71,6 @@ GenEdgePoints.prototype.SetData =function (args){
   var queue = this.queue;
 
   try {
-    
-
     
     var bufferSize1 = this.facesFvert.length * Int32Array.BYTES_PER_ELEMENT;
     this.inFacesFvert = context.createBuffer(cl.MEM_READ_ONLY, bufferSize1, null);
@@ -180,7 +179,7 @@ GenEdgePoints.prototype.RunProgram =function (){
   }
   catch (e)
   {
-    console.error("Failure  ; Message: "+ e.message);
+    console.error("Failure running program; Message: "+ e.message);
   }
 
 }
