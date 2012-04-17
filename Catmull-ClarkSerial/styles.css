@@ -1,0 +1,44 @@
+
+.leftControls{
+	left:20px;
+	padding: 20px 20px 40px 20px;
+	position : relative;
+	height: 200px;
+	width: 300px;
+  	-webkit-box-shadow: 0 0 10px #fff;
+  	-moz-box-shadow: 0 0 10px #000;
+  	-o-box-shadow: 0 0 10px #000;
+}
+.className{
+	width:400px;
+    height:400px;
+	position:relative;
+	box-shadow: 0 0 10px #fff;
+  	-webkit-box-shadow: 0 0 10px #fff;
+  	-moz-box-shadow: 0 0 10px #000;
+  	-o-box-shadow: 0 0 10px #000;
+}
+
+.rightControls{
+	right:1px;
+	position : relative;
+	height: 200px;
+	width: 300px;
+  	-webkit-box-shadow: 0 0 10px #fff;
+  	-moz-box-shadow: 0 0 10px #000;
+  	-o-box-shadow: 0 0 10px #000;
+}
+
+.info {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	font-size:16px;
+	color: white;
+}
+.btn {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	font-size:16px;
+	color: black;
+    height:30px;
+}
