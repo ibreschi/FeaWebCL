@@ -130,6 +130,17 @@ WebCLController.prototype.getKernels = function (){
 }
 
 
+WebCLController.prototype.cleanWebCL= function(){
+  this.context.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.programs.forEach(function(item, index, array){   
+   item.releaseCLResource();
+  });
+  this.kernels.forEach(function(item, index, array){   
+   item.releaseCLResource();
+  });
+}
+
 
 // var cl = new WebCLComputeContext();
 // var platform_ids = cl.getPlatformIDs();

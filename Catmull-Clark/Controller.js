@@ -21,8 +21,8 @@ exports.Controller = function (){
   this.wireframe= 0;
 
 
-  this.js_simMode     = true;
-  this.cl_simMode     = false;
+  this.js_simMode     = false;
+  this.cl_simMode     = true;
   this.drawMode       = null;
   this.isSimRunning   = true;
   this.is3D           = true;
@@ -49,9 +49,8 @@ Controller.prototype.InitController = function ()
   }
   else {
     // start the CL subdivider engine
-    //NBODY = 4 * GetWorkGroupSize() ;
-    this.subdivider= WebCLProgram();
-    this.subdivider.InitWebCL();
+    this.subdivider=ParallelSubdivider();
+    this.subdivider.initParallel();
     this.SetMode(this.js_simMode);
   }
 
@@ -89,21 +88,23 @@ Controller.prototype.add_obj = function(file,nr_levels){
 };
 
 Controller.prototype.InitModels= function(){
+  var tStart = new Date().valueOf();
   console.log("Adding a Cube");
-  this.add_obj("objs/cube.obj",5);
+  this.add_obj("objs/cube.obj",4);
   console.log("Cube added");
 
-  console.log("Adding a Tetrahedron");
-  this.add_obj("objs/tetra.obj",5);
-  console.log("Tetrahedron added");
+  // console.log("Adding a Tetrahedron");
+  // this.add_obj("objs/tetra.obj",2);
+  // console.log("Tetrahedron added");
 
-  console.log("Adding a Bigguy");
-  this.add_obj("objs/bigguy.obj",3);
-  console.log("Bigguy added");
-  console.log("Adding a Monsterfrog");
-  this.add_obj("objs/monsterfrog.obj",3);
-  console.log("Monsterfrog added");
-
+  // console.log("Adding a Bigguy");
+  // this.add_obj("objs/bigguy.obj",3);
+  // console.log("Bigguy added");
+  // console.log("Adding a Monsterfrog");
+  // this.add_obj("objs/monsterfrog.obj",3);
+  // console.log("Monsterfrog added");
+  var tEnd = new Date().valueOf();
+  console.log("total Time :",tEnd-tStart);
 
   // others add 
 };
@@ -183,9 +184,11 @@ Controller.prototype.SetMode= function(isJs) {
   var div = document.getElementById("sim");
   if(isJs){
     div.firstChild.nodeValue =  "JS";
+    // do stuff to init js
   }
   else {
-    div.firstChild.nodeValue = (this.subdivider.cl === undefined)? "NA" : "CL";
+    div.firstChild.nodeValue = (this.subdivider.webCLController === undefined)? "NA" : "CL";
+    // du stuff to init cl
   }
   var div = document.getElementById("drw");
   div.firstChild.nodeValue = (this.gl === null)? "NA" : "GL";

@@ -45,7 +45,8 @@ exports.GenVertexPoints = function (){
 GenVertexPoints.prototype.initProcedure= function(webCLProgram){
   this.cl = webCLProgram.cl;
   this.context=webCLProgram.context;
-  this.queue= webCLProgram.queue;
+  //this.queue= webCLProgram.queue;
+  this.queue= webCLProgram.getNewQueue();
   this.kernel= webCLProgram.kernels[2];
   this.program = webCLProgram.programs[2];
   this.device_id =webCLProgram.device_id;
@@ -54,6 +55,23 @@ GenVertexPoints.prototype.initProcedure= function(webCLProgram){
 
 }
 
+function hcf(text1,text2){
+  var gcd=1;
+  if (text1>text2) {
+    text1=text1+text2;
+    text2=text1-text2;
+    text1=text1-text2;}
+  if ((text2==(Math.round(text2/text1))*text1)) {
+    gcd=text1;
+  }
+  else {
+  for (var i = Math.round(text1/2) ; i > 1; i=i-1) {
+    if ((text1==(Math.round(text1/i))*i))
+    if ((text2==(Math.round(text2/i))*i)) {gcd=i; i=-1;}
+  }
+}
+return gcd;
+}
 GenVertexPoints.prototype.SetData =function (args){
   this.facesFvert= new Int32Array(args[0]);
   this.verts = new Float32Array(args[1]);
@@ -65,10 +83,19 @@ GenVertexPoints.prototype.SetData =function (args){
   this.vFLen =args[7];
   
   this.workGroupSize=this.GetWorkGroupSize();
+  this.globalWorkSize[0] = this.vertsFaces.length/this.vFLen ;  
 
-  this.globalWorkSize[0] = this.vertsFaces.length/this.vFLen ;
-  console.log("ciao ", this.globalWorkSize[0], this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));     
-  this.localWorkSize[0]= 1;
+  if (this.workGroupSize> this.vertsFaces.length/this.vFLen)
+    this.localWorkSize[0] = this.vertsFaces.length/this.vFLen;
+  else {
+    var mcd = hcf(this.workGroupSize, this.vertsFaces.length/this.vFLen);
+    this.localWorkSize[0] = Math.min(mcd)
+  }
+  console.log(this.vertsFaces.length ,this.vFLen);
+  console.log(this.globalWorkSize[0],this.localWorkSize[0] ,this.vertsFaces.length/this.vFLen );
+
+
+  //console.log("GVp SetData :",this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));     
   
   var cl = this.cl;
   var context = this.context;
@@ -168,6 +195,7 @@ GenVertexPoints.prototype.RunProgram =function (){
     queue.finish(function () { 
       var bufferSize = that.verts.length * Float32Array.BYTES_PER_ELEMENT;
       that.queue.enqueueReadBuffer(that.inVerts, true, 0, bufferSize, that.outP, null);
+      that.Clean();
     },null);
   }
   catch (e)
@@ -176,7 +204,29 @@ GenVertexPoints.prototype.RunProgram =function (){
   }
 
 }
-
+GenVertexPoints.prototype.Clean= function(){
+  //console.log("GVp PreClean :",this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT)); 
+  this.inFacesFvert.releaseCLResource();
+  this.inVerts.releaseCLResource();
+  this.inVertsFaces.releaseCLResource();
+  this.inVertsEdges.releaseCLResource(); 
+  this.inEdgesv0.releaseCLResource();
+  this.inEdgesv1.releaseCLResource();
+  this.outPoints.releaseCLResource(); 
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  //this.program.releaseCLResource();
+  //this.kernel.releaseCLResource();
+  //this.queue.releaseCLResource();
+  //this.context.releaseCLResource();
+  //console.log("GVp PostClean :",this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));
+}
 
 GenVertexPoints.prototype.GetResults= function()
 {  

@@ -28,7 +28,7 @@
 var WINW                = 500;          // drawing canvas width
 var WINH                = 500;          // drawing canvas height
 
-var NBODY               = 2046;         // default number of particles to simulate
+var NBODY               = 16368;         // default number of particles to simulate
 var INNER_FLOPS         = 25;           // number of flops in inner loop of simulation
 
 var SAMPLEPERIOD        = 10;           // calculate fps and sim/draw times over this many frames

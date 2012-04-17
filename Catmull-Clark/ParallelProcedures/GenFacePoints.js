@@ -4,71 +4,125 @@ exports.GenFacePoints = function (){
   if (!(this instanceof GenFacePoints)){
     return new GenFacePoints();
   }
-  this.cl = null;
-  this.platform_ids=[];
-  this.platform_id;  
-  this.device_ids=[]; 
-  this.device_id;
-  this.context=null;                                // OpenCL context
+  this.cl = null;       // OpenCL context
+  this.context=null; 
   this.queue=null;
-  this.genFacePoints = null;
-  this.genVertexPoints =null;
-  this.genEdgePoints =null;
+  this.kernel =null;
+  this.program = null;
+  this.device_id;
+                     
+  this.globalWorkSize = new Int32Array(1);
+  this.localWorkSize = new Int32Array(1);           
+  this.workGroupSize;
+
+  // Input Data
+  this.facesVs= null;  
+  this.facesFvert= null;  
+  this.verts= null;  
+  this.vertForFace=0;
+
+  // CL buffers
+  this.curFacesVs= null;  
+  this.curFacesFvert= null;  
+  this.curVerts= null;  
+  this.outPoints= null;  
+
+  // Output Data
+  this.outP= null;  
+
+
 };
 
+GenFacePoints.prototype.initProcedure= function(webCLProgram){
+  this.cl = webCLProgram.cl;
+  this.context=webCLProgram.context;
+  //this.queue= webCLProgram.queue;
+  this.queue= webCLProgram.getNewQueue();
+  this.kernel= webCLProgram.kernels[0];
+  this.program = webCLProgram.programs[0];
+  this.device_id =webCLProgram.device_id;
 
-GenFacePoints.prototype.InitBuffers =function (){
 
+}
+
+function hcf(text1,text2){
+  var gcd=1;
+  if (text1>text2) {
+    text1=text1+text2;
+    text2=text1-text2;
+    text1=text1-text2;}
+  if ((text2==(Math.round(text2/text1))*text1)) {
+    gcd=text1;
+  }
+  else {
+  for (var i = Math.round(text1/2) ; i > 1; i=i-1) {
+    if ((text1==(Math.round(text1/i))*i))
+    if ((text2==(Math.round(text2/i))*i)) {gcd=i; i=-1;}
+  }
+}
+return gcd;
+}
+GenFacePoints.prototype.SetData =function (args){
+  this.facesVs = args[0];
+  this.facesFvert= args[1];
+  this.verts = args[2];
+  this.vertForFace= args[3];
+  console.log(this.vertForFace);
+  this.workGroupSize=this.GetWorkGroupSize();
+  this.globalWorkSize[0] = this.facesFvert.length ; 
+  if (this.workGroupSize > this.facesFvert.length )
+    this.localWorkSize[0] = this.facesFvert.length ;
+  else 
+    this.localWorkSize[0] = hcf(this.workGroupSize, this.facesFvert.length );
+  //console.log(this.globalWorkSize[0],this.localWorkSize[0], this.facesFvert.length);
+  //console.log("GFp SetData :", this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));
+
+  var cl = this.cl;
+  var context = this.context;
+  var queue = this.queue;
   try {
-    // Create CL buffers from GL VBOs
-    // (Initial load of positions is via gl.bufferData)
-    //console.log(userData.webGlDrawer.app.buffers.curPos);
-    curPosBuffer = context.createFromGLBuffer(cl.MEM_READ_WRITE, userData.webGlDrawer.app.buffers.curPos);
-    if(curPosBuffer === null) {
+    
+    var bufferSize1 = this.facesVs.length * Int32Array.BYTES_PER_ELEMENT;
+    this.curFacesVs = context.createBuffer(cl.MEM_READ_ONLY, bufferSize1, null);
+    if(this.curFacesVs === null) {
       console.error("Failed to allocate device memory");
       return null;
     }
     
-    bufferSize = NBODY * POS_ATTRIB_SIZE * Float32Array.BYTES_PER_ELEMENT;
-    // Create CL working buffers (will be copied to current buffers after computation)
-    //
-
-    curVelBuffer = context.createBuffer(cl.MEM_READ_WRITE, bufferSize, null);
-    if(curVelBuffer === null) {
+    
+    var bufferSize2 = this.facesFvert.length * Int32Array.BYTES_PER_ELEMENT;
+    this.curFacesFvert = context.createBuffer(cl.MEM_WRITE_ONLY, bufferSize2, null);
+    if(this.curFacesFvert === null) {
       console.error("Failed to allocate device memory");
       return null;
     }
     
-
-    genPosBuffer = context.createBuffer(cl.MEM_READ_ONLY, bufferSize, null);
-    if(genPosBuffer === null) {
-      console.error("Failed to allocate device memory");
-      return null;
-    }
-    
-
-
-    genVelBuffer = context.createBuffer(cl.MEM_READ_ONLY, bufferSize, null);
-    if(genVelBuffer === null) {
+    var bufferSize3 = this.verts.length * Float32Array.BYTES_PER_ELEMENT;
+   
+    this.curVerts = context.createBuffer(cl.MEM_READ_ONLY, bufferSize3, null);
+    if(this.curVerts === null) {
       console.error("Failed to allocate device memory");
       return null;
     }
 
-    queue.enqueueWriteBuffer(curVelBuffer, true, 0, bufferSize, userData.curVel, null);
-    queue.enqueueWriteBuffer(genPosBuffer, true, 0, bufferSize, userData.genPos, null);
-    queue.enqueueWriteBuffer(genVelBuffer, true, 0, bufferSize, userData.genVel, null);
+    queue.enqueueWriteBuffer(this.curFacesVs, true, 0, bufferSize1, this.facesVs, null);
+    queue.enqueueWriteBuffer(this.curFacesFvert, true, 0, bufferSize2, this.facesFvert, null);
+    queue.enqueueWriteBuffer(this.curVerts, true, 0, bufferSize3, this.verts, null);
 
-    nxtPosBuffer = context.createBuffer(cl.MEM_READ_ONLY, bufferSize, null);
-    if(nxtPosBuffer === null) {
+
+    var bufferSize4 = this.facesFvert.length*3 *Float32Array.BYTES_PER_ELEMENT;
+    // this buffer contains the new facepoints that are one for each old face
+    this.outPoints = context.createBuffer(cl.MEM_WRITE_ONLY, bufferSize4, null);
+    if(this.outPoints === null) {
       console.error("Failed to allocate device memory");
       return null;
     }
 
-    nxtVelBuffer = context.createBuffer(cl.MEM_READ_ONLY, bufferSize, null);
-    if(nxtPosBuffer === null) {
-      console.error("Failed to allocate device memory");
-      return null;
-    }
+    // nxtVelBuffer = context.createBuffer(cl.MEM_READ_ONLY, bufferSize, null);
+    // if(nxtPosBuffer === null) {
+    //   console.error("Failed to allocate device memory");
+    //   return null;
+    // }
     
     // if(TEST==0){
 
@@ -85,83 +139,80 @@ GenFacePoints.prototype.InitBuffers =function (){
     //  TEST=1;
     // }
 
-
-    globalWorkSize[0] = NBODY;   
-    localWorkSize[0] = Math.min(workGroupSize, NBODY);
-    localWorkSize[0]=1;
-
-    
-    queue.finish(this.GetNullResults, 0);
+    this.outP= new Float32Array(this.facesFvert.length*3);
+    queue.finish(function () { }, null);
   }
   catch (e)
   {
     console.error("Failure setting buffers; Message: "+ e.message);
-    test.showFailure();
   }
   return cl;
 
 }
 
-GenFacePoints.prototype.GetNullResults =function(userData)
-{
-}
-
-
 GenFacePoints.prototype.RunProgram =function (){
-    try {
+  var kernel = this.kernel;
+  var cl = this.cl;
+  var queue = this.queue;
+  try {
     if(cl === null)
       return;
-    if(userData.isGLCLshared) {
-      queue.enqueueAcquireGLObjects(curPosBuffer, null);
-    }
-
-    var localMemSize = localWorkSize[0] * POS_ATTRIB_SIZE * Float32Array.BYTES_PER_ELEMENT;
-    kernel.setKernelArgGlobal(0, curPosBuffer);
-    kernel.setKernelArgGlobal(1, curVelBuffer);
-    kernel.setKernelArgGlobal(2, genPosBuffer);
-    kernel.setKernelArgGlobal(3, genVelBuffer);
-    kernel.setKernelArg(4, DT, cl.KERNEL_ARG_FLOAT);
-    queue.enqueueNDRangeKernel(kernel, 1, 0, globalWorkSize, localWorkSize, null);
+    kernel.setKernelArgGlobal(0, this.curFacesVs);
+    kernel.setKernelArgGlobal(1, this.curFacesFvert);
+    kernel.setKernelArgGlobal(2, this.curVerts);
+    kernel.setKernelArgGlobal(3, this.outPoints);
+    kernel.setKernelArg(4, this.vertForFace, cl.KERNEL_ARG_INT);
+    queue.enqueueNDRangeKernel(kernel, 1, 0, this.globalWorkSize, this.localWorkSize, null);
     
-
-    queue.finish(this.GetResults, cl);
-    
+    var that = this;
+    queue.finish(function () { 
+      var bufferSize = (that.facesFvert.length*3)*Float32Array.BYTES_PER_ELEMENT;
+      that.queue.enqueueReadBuffer(that.outPoints, true, 0, bufferSize, that.outP, null);
+      var bufferSize2 = that.facesFvert.length*Int32Array.BYTES_PER_ELEMENT;
+      that.queue.enqueueReadBuffer(that.curFacesFvert , true, 0, bufferSize2, that.facesFvert, null);
+      
+      that.Clean();
+    },null);
   }
   catch (e)
   {
-    console.error("Failure  ; Message: "+ e.message);
+    console.error("Failure running program; Message: "+ e.message);
   }
 
 }
+GenFacePoints.prototype.Clean= function(){
+  //console.log("GFp Pre Clean :",this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));  
+  this.curFacesVs.releaseCLResource();
+  this.curFacesFvert.releaseCLResource();
+  this.curVerts.releaseCLResource();
+  this.outPoints.releaseCLResource();  
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  //this.program.releaseCLResource();
+  //this.kernel.releaseCLResource();
+  //this.queue.releaseCLResource();
+  //this.context.releaseCLResource();
+  //console.log("GFp PostClean :",this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));
+}
 
-
-GenFacePoints.prototype.GetResults = function (cl)
+GenFacePoints.prototype.GetResults= function()
 {  
-  try {
-    if(userData.isGLCLshared) {
-      queue.enqueueReleaseGLObjects(curPosBuffer, null);
-    }
-  }
-  catch (e)
-  {
-    console.error("Failure getting resoults ; Message: "+ e.message);
-    test.showFailure();
-  }
+  return [this.outP, this.facesFvert];
 }
 GenFacePoints.prototype.GetWorkGroupSize= function() {
     try {
       // Get the maximum work group size for executing the kernel on the device
-      //
-      kernel =this.kernel;
-      console.log(kernel.getKernelWorkGroupInfo(device_id, cl.KERNEL_WORK_GROUP_SIZE))
-
+      var workGroupSize= this.kernel.getKernelWorkGroupInfo(this.device_id, this.cl.KERNEL_WORK_GROUP_SIZE);
   }
   catch (e)
   {
     console.error( kernel+"Failure getting workGroupSize; Message: "+ e.message );
   }
 
-  //return workGroupSize;  
+  return workGroupSize;  
 }
 
 

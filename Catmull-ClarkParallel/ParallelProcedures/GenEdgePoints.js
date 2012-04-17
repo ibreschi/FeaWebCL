@@ -44,7 +44,6 @@ exports.GenEdgePoints = function (){
 GenEdgePoints.prototype.initProcedure= function(webCLProgram){
   this.cl = webCLProgram.cl;
   this.context=webCLProgram.context;
-  //this.queue= webCLProgram.getNewQueue();
   this.queue =webCLProgram.queue;
   this.kernel= webCLProgram.kernels[1];
   this.program = webCLProgram.programs[1];
@@ -53,6 +52,23 @@ GenEdgePoints.prototype.initProcedure= function(webCLProgram){
 
 }
 
+function hcf(text1,text2){
+  var gcd=1;
+  if (text1>text2) {
+    text1=text1+text2;
+    text2=text1-text2;
+    text1=text1-text2;}
+  if ((text2==(Math.round(text2/text1))*text1)) {
+    gcd=text1;
+  }
+  else {
+  for (var i = Math.round(text1/2) ; i > 1; i=i-1) {
+    if ((text1==(Math.round(text1/i))*i))
+    if ((text2==(Math.round(text2/i))*i)) {gcd=i; i=-1;}
+  }
+}
+return gcd;
+}
 GenEdgePoints.prototype.SetData =function (args){
   this.facesFvert= args[0];
   this.verts = args[1];
@@ -62,9 +78,16 @@ GenEdgePoints.prototype.SetData =function (args){
   this.edgesf1 = args[5];
 
   this.workGroupSize=this.GetWorkGroupSize();
-  this.globalWorkSize[0] = this.edgesv0.length ;
-  console.log("bau",this.globalWorkSize[0], this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));
-  this.localWorkSize[0]= 1;
+  this.globalWorkSize[0] = this.edgesv0.length ;  
+  if (this.workGroupSize> this.edgesv0.length)
+    this.localWorkSize[0] = this.edgesv0.length;
+  else 
+    this.localWorkSize[0] = hcf(this.workGroupSize, this.edgesv0.length);
+  
+
+  console.log(this.globalWorkSize[0],this.localWorkSize[0] ,this.edgesv0.length);
+  //console.log("GEp SetData :",this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));
+
 
   var cl = this.cl;
   var context = this.context;
@@ -168,22 +191,57 @@ GenEdgePoints.prototype.RunProgram =function (){
     kernel.setKernelArgGlobal(7, this.outEdgesEvert);
 
     queue.enqueueNDRangeKernel(kernel, 1, 0, this.globalWorkSize, this.localWorkSize, null);
-    
-    var that = this;
-    queue.finish(function () { 
-      var bufferSize = (that.edgesv0.length*3)*Float32Array.BYTES_PER_ELEMENT;
-      that.queue.enqueueReadBuffer(that.outPoints, true, 0, bufferSize, that.outP, null);
-      var bufferSize2 = that.edgesv0.length*Int32Array.BYTES_PER_ELEMENT;
-      that.queue.enqueueReadBuffer(that.outEdgesEvert , true, 0, bufferSize2, that.outEEvert, null);
-    },null);
+
+
+    // qui errore queue si rompe dopo questo ^^^^^^^^^^^ la causa dovrebbe essere 
+    // o nel tempo che impiega il kernel a essere eseguito 
+    // o nei dati che gli sono passati 
+
   }
   catch (e)
   {
     console.error("Failure running program; Message: "+ e.message);
   }
+  try {
+    var that = this;
+    queue.finish(function () { 
+        var bufferSize = (that.edgesv0.length*3)*Float32Array.BYTES_PER_ELEMENT;
+        that.queue.enqueueReadBuffer(that.outPoints, true, 0, bufferSize, that.outP, null);
+        var bufferSize2 = that.edgesv0.length*Int32Array.BYTES_PER_ELEMENT;
+        that.queue.enqueueReadBuffer(that.outEdgesEvert , true, 0, bufferSize2, that.outEEvert, null);
+        that.Clean();
+    },cl);
+  }
+  catch (e)
+  {
+    console.error("Failure getting results; Message: "+ e.message);
+  }  
 
 }
 
+GenEdgePoints.prototype.Clean= function(){
+  //console.log("GEp PreClean :",this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));
+        
+  this.inFacesFvert.releaseCLResource();
+  this.inVerts.releaseCLResource();
+  this.inEdgesv0.releaseCLResource(); 
+  this.inEdgesv1.releaseCLResource();
+  this.inEdgesf0.releaseCLResource();  
+  this.inEdgesf1.releaseCLResource();
+  this.outEdgesEvert.releaseCLResource();
+  this.outPoints.releaseCLResource();
+  //this.program.releaseCLResource();
+  //this.kernel.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  // this.context.releaseCLResource();
+  //console.log("GEp PostClean :",this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));
+}
 
 GenEdgePoints.prototype.GetResults= function()
 {  

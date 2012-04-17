@@ -26,9 +26,11 @@ __kernel void genFacePoints(
 	__global float * outPoints,
 		int len)
 	{
-	unsigned int gid = get_global_id(0);	
+	unsigned int gid = get_group_id(0);;	
+	unsigned int lid = get_local_id(0);	
+	unsigned int id = gid+lid;
 	float3 p= (float3) (0.0f, 0.0f, 0.0f);
-	int4 vertices = (int4) (facesVs[4*gid],facesVs[4*gid+1],facesVs[4*gid+2],facesVs[4*gid+3]);
+	int4 vertices = (int4) (facesVs[4*id],facesVs[4*id+1],facesVs[4*id+2],facesVs[4*id+3]);
 	float3 point;
 	int j;
 	for (j = 0; j < len; ++j) {
@@ -37,10 +39,10 @@ __kernel void genFacePoints(
         p=SumVectorF(p,point);
 	}
  	p=ProdVectorF((1.0f / len), p);
- 	outPoints[3*gid + 0] = p.x;
-	outPoints[3*gid + 1] = p.y;
-	outPoints[3*gid + 2] = p.z;
-	facesFvert[gid] = get_global_size(0)+gid+2;
+ 	outPoints[3*id + 0] = p.x;
+	outPoints[3*id + 1] = p.y;
+	outPoints[3*id + 2] = p.z;
+	facesFvert[id] = get_global_size(0)+id+2;
 
 }
 </script>
@@ -67,29 +69,30 @@ __kernel void genEdgePoints(
  	__global int * outEdgesEvert)
 	{
 
-	unsigned int gid = get_global_id(0);	
+	unsigned int gid = get_group_id(0);;	
+	unsigned int lid = get_local_id(0);	
+	unsigned int id = gid+lid;
 
-	int eV0 = (int) edgesv0[gid];
-	int eV1 = (int) edgesv1[gid];
-	int eF0 = (int) edgesf0[gid];
-	int eF1 = (int) edgesf1[gid];
+	int eV0 = (int) edgesv0[lid];
+	int eV1 = (int) edgesv1[lid];
+	int eF0 = (int) edgesf0[lid];
+	int eF1 = (int) edgesf1[lid];
 
 	float3 p = (float3) (0.0f, 0.0f, 0.0f);
 	float3 vP0 = (float3) (verts[3*eV0], verts[(3*eV0)+1], verts[(3*eV0)+2]);
 	float3 vP1 = (float3) (verts[3*eV1], verts[(3*eV1)+1], verts[(3*eV1)+2]);
 	float3 vP2 = (float3) (verts[3*facesFvert[eF0]], verts[3*facesFvert[eF0]+1], verts[3*facesFvert[eF0]+2]);
 	float3 vP3 = (float3) (verts[3*facesFvert[eF1]], verts[3*facesFvert[eF1]+1], verts[3*facesFvert[eF1]+2]);
-    
 
     p=SumVectorF(p,vP0);
  	p=SumVectorF(p,vP1);
 	p=SumVectorF(p,vP2);
 	p=SumVectorF(p,vP3);
 	p=ProdVectorF((0.25f), p);
-	outPoints[3*gid + 0] = p.x;
-	outPoints[3*gid + 1] = p.y;
-	outPoints[3*gid + 2] = p.z;
-	outEdgesEvert[gid] = get_global_size(0)+gid+2;
+	outPoints[3*lid + 0] = p.x;
+	outPoints[3*lid + 1] = p.y;
+	outPoints[3*lid + 2] = p.z;
+	outEdgesEvert[lid] = get_global_size(0)+lid+2;
 }
 </script>
 
@@ -116,30 +119,32 @@ __kernel void genVertexPoints(
 		int len,
 		int len2)
 	{
-	unsigned int gid = get_global_id(0);	
+	unsigned int gid = get_group_id(0);;	
+	unsigned int lid = get_local_id(0);	
+	unsigned int id = gid+lid;
 
-	float3 point = (float3) (verts[3*gid], verts[(3*gid)+1], verts[(3*gid)+2]);
+	float3 point = (float3) (verts[3*id], verts[(3*id)+1], verts[(3*id)+2]);
  	float app = (float)((len -2.0f)/ len);
 	float3 newVecP = app*point.xyz;
 	float3 p= (float3) (0.0f, 0.0f, 0.0f);
 	int j;
 	for (j =0 ; j < len; j++) {
-		int z =(int)facesFvert[vertsFace[(3*gid)+j]];
+		int z =(int)facesFvert[vertsFace[(3*id)+j]];
 		float3 vP=(float3) (verts[3*z], verts[(3*z)+1], verts[(3*z)+2]);
 		p=SumVectorF(p,vP);
 	}
 
 	newVecP = MedVectorF(newVecP, 1.0f / (len * len), p);
-	outPoints[3*gid + 0] = newVecP.x;
-	outPoints[3*gid + 1] = newVecP.y;
-	outPoints[3*gid + 2] = newVecP.z;
+	outPoints[3*id + 0] = newVecP.x;
+	outPoints[3*id + 1] = newVecP.y;
+	outPoints[3*id + 2] = newVecP.z;
 
 	p.xyz = (float3) (0.0f, 0.0f, 0.0f);
 
 	int z ;
 	for (int t = 0; t < len2; t++) {
-		int ei = vertsEdges[(3*gid)+t];
-		if(edgesv0[ei]==(gid)){
+		int ei = vertsEdges[(3*id)+t];
+		if(edgesv0[ei]==(id)){
 			z = edgesv1[ei];
 		}
 		else {
@@ -150,9 +155,9 @@ __kernel void genVertexPoints(
 	}
 
 	newVecP = MedVectorF(newVecP, 1.0f / (len * len), p);
-	verts[3*gid + 0] = newVecP.x;
-	verts[3*gid + 1] = newVecP.y;
-	verts[3*gid + 2] = newVecP.z;
+	verts[3*id + 0] = newVecP.x;
+	verts[3*id + 1] = newVecP.y;
+	verts[3*id + 2] = newVecP.z;
 
 	
 }

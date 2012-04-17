@@ -25,7 +25,6 @@ exports.GenFacePoints = function (){
   this.curFacesFvert= null;  
   this.curVerts= null;  
   this.outPoints= null;  
-  this.outFacesFvert= null;  
 
   // Output Data
   this.outP;
@@ -36,7 +35,8 @@ exports.GenFacePoints = function (){
 GenFacePoints.prototype.initProcedure= function(webCLProgram){
   this.cl = webCLProgram.cl;
   this.context=webCLProgram.context;
-  this.queue= webCLProgram.queue;
+  //this.queue= webCLProgram.queue;
+  this.queue= webCLProgram.getNewQueue();
   this.kernel= webCLProgram.kernels[0];
   this.program = webCLProgram.programs[0];
   this.device_id =webCLProgram.device_id;
@@ -44,14 +44,35 @@ GenFacePoints.prototype.initProcedure= function(webCLProgram){
 
 }
 
+function hcf(text1,text2){
+  var gcd=1;
+  if (text1>text2) {
+    text1=text1+text2;
+    text2=text1-text2;
+    text1=text1-text2;}
+  if ((text2==(Math.round(text2/text1))*text1)) {
+    gcd=text1;
+  }
+  else {
+  for (var i = Math.round(text1/2) ; i > 1; i=i-1) {
+    if ((text1==(Math.round(text1/i))*i))
+    if ((text2==(Math.round(text2/i))*i)) {gcd=i; i=-1;}
+  }
+}
+return gcd;
+}
 GenFacePoints.prototype.SetData =function (args){
   this.facesVs = args[0];
   this.facesFvert= args[1];
   this.verts = args[2];
   this.workGroupSize=this.GetWorkGroupSize();
-  this.globalWorkSize[0] = this.facesFvert.length ;
-  console.log("miao ",this.globalWorkSize[0], this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));
-  this.localWorkSize[0]= 1;
+  this.globalWorkSize[0] = this.facesFvert.length ; 
+  if (this.workGroupSize > this.facesFvert.length )
+    this.localWorkSize[0] = this.facesFvert.length ;
+  else 
+    this.localWorkSize[0] = hcf(this.workGroupSize, this.facesFvert.length );
+  console.log(this.globalWorkSize[0],this.localWorkSize[0], this.facesFvert.length);
+  //console.log("GFp SetData :", this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));
 
   var cl = this.cl;
   var context = this.context;
@@ -147,6 +168,8 @@ GenFacePoints.prototype.RunProgram =function (){
       that.queue.enqueueReadBuffer(that.outPoints, true, 0, bufferSize, that.outP, null);
       var bufferSize2 = that.facesFvert.length*Int32Array.BYTES_PER_ELEMENT;
       that.queue.enqueueReadBuffer(that.curFacesFvert , true, 0, bufferSize2, that.facesFvert, null);
+      
+      that.Clean();
     },null);
   }
   catch (e)
@@ -155,7 +178,23 @@ GenFacePoints.prototype.RunProgram =function (){
   }
 
 }
-
+GenFacePoints.prototype.Clean= function(){
+  //console.log("GFp Pre Clean :",this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));  
+  this.curFacesVs.releaseCLResource();
+  this.curFacesFvert.releaseCLResource();
+  this.curVerts.releaseCLResource();
+  this.outPoints.releaseCLResource();  
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  this.queue.releaseCLResource();
+  //this.program.releaseCLResource();
+  //this.kernel.releaseCLResource();
+  //this.queue.releaseCLResource();
+  //this.context.releaseCLResource();
+  //console.log("GFp PostClean :",this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));
+}
 
 GenFacePoints.prototype.GetResults= function()
 {  

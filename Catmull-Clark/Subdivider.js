@@ -49,7 +49,7 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
     this.do_iteration( i==nr_levels - 1 );
     levels[i] = this.convert();
 	}
-	this.destroy();
+	//this.destroy();
 	return levels;
 }
 
@@ -169,6 +169,9 @@ Subdivider.prototype.do_iteration= function(last_iteration){
 	V = this.verts.length;
 	F = this.faces.length;
 	E = this.edges.length;
+  // this.faces.forEach(function(item, index, array){   
+  //  console.log(item.vs.length);
+  // });
 	/* 1. Update vertices */
 	/* Create face vertices */
   var face ,p,len;
@@ -182,7 +185,9 @@ Subdivider.prototype.do_iteration= function(last_iteration){
     vec_mul(p, (1.0 / len), p);
     face.fvert = this.add_vert(p);
   };
-  /* Create edge vertices */
+
+
+  //  Create edge vertices 
   for (var i = 0; i < E; i++) {
     p=[0,0,0];
     e = this.edges[i];
@@ -194,6 +199,7 @@ Subdivider.prototype.do_iteration= function(last_iteration){
     vec_mul(p, 0.25, p);
     e.evert = this.add_vert(p);
   };
+
   var n,appog,z;
   /* Move old vertices */
   // it moves and works only  with the old vertices
@@ -232,13 +238,11 @@ Subdivider.prototype.do_iteration= function(last_iteration){
   /* 2. Create new faces */
   for (var i = 0; i < F; i++) {
     f=this.faces[i];
-
+    // console.log(f.vs.length);
     for (j = 0; j < f.vs.length; j++) {
  
       v0=f.vs[(j - 1 + f.vs.length) % f.vs.length];
-
       v  = f.vs[j];
-
       v1 = f.vs[(j + 1) % f.vs.length];
       e0 = this.edges[this.find_edge( v0, v)];
       e1 = this.edges[this.find_edge( v, v1)];
@@ -252,6 +256,10 @@ Subdivider.prototype.do_iteration= function(last_iteration){
       faces.push(new_face);
     };
   };
+  // console.log(
+  //     faces.reduce(function(previousValue, currentValue, index, array){  
+  //                     return previousValue.concat( currentValue.vs);
+  //                   }, []));
   this.faces=faces;
   faces=[];
 

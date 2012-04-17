@@ -57,7 +57,7 @@ $(document).ready(function(){
 
   	void main(void) {
     	gl_Position = uPMatrix * uMVMatrix * vec4(position, 1.0);
-    	//gl_PointSize  =1.0;
+    	gl_PointSize  =2.0;
   	}
 </script>
 <script id="point-fshader" type="x-shader/x-fragment">
@@ -70,7 +70,7 @@ $(document).ready(function(){
 
 
 
-<script id="GenFacePoints" type ="x-kernel">
+<script id="genFacePoints" type ="x-kernel">
 
 float3 SumVectorF(float3 a, float3 b)
   	{	
@@ -81,36 +81,158 @@ float3 ProdVectorF(float3 a, float3 b)
 		return a*b;
 	}
 
-__kernel void GenFacePoints(
-	float4 * facesVs,
-	float4 * facesOut,
-	float3 * points,
-	int len
-	){
-	unsigned int gid = get_global_id(0);
+__kernel void genFacePoints(
+	__global int * facesVs,
+	__global int * facesFvert,
+	__global float * verts,
+	__global float * outPoints,
+		int len)
+	{
 
+		// len va cambiato 
+	unsigned int gid = get_group_id(0);;	
+	unsigned int lid = get_local_id(0);	
+	unsigned int id = gid+lid;
 	float3 p= (float3) (0.0f, 0.0f, 0.0f);
-	int4 vectors = facesVs[gid];
-
+	int4 vertices = (int4) (facesVs[4*id],facesVs[4*id+1],facesVs[4*id+2],facesVs[4*id+3]);
+	float3 point;
 	int j;
-	for (j = 0; j < len; j++) {
-        p=SumVectorF(p,this.verts[vectors[j]);
-      };
-    p=ProdVectorF((1.0f / len), p);
-    
-    face.fvert = this.add_vert(p);
-
+	for (j = 0; j < len; ++j) {
+		int vn = (int)vertices[j];
+		point.xyz = (float3) (verts[3*vn], verts[(3*vn)+1], verts[(3*vn)+2]);
+        p=SumVectorF(p,point);
+	}
+ 	p=ProdVectorF((1.0f / len), p);
+ 	outPoints[3*id + 0] = p.x;
+	outPoints[3*id + 1] = p.y;
+	outPoints[3*id + 2] = p.z;
+	facesFvert[id] = get_global_size(0)+id+2;
 
 }
 </script>
 
+<script id="genEdgePoints" type ="x-kernel">
 
-<script id="GenEdgePoints" type ="x-kernel">
+float3 SumVectorF(float3 a, float3 b)
+  	{	
+    	return a+b;
+  	}
+float3 ProdVectorF(float3 a, float3 b)
+	{
+		return a*b;
+	}
+
+__kernel void genEdgePoints(
+	__global int * facesFvert,
+	__global float * verts,
+	__global int * edgesv0,
+  	__global int * edgesv1,
+ 	__global int * edgesf0,
+  	__global int * edgesf1,
+  	__global float * outPoints,
+ 	__global int * outEdgesEvert)
+	{
+
+	unsigned int gid = get_group_id(0);;	
+	unsigned int lid = get_local_id(0);	
+	unsigned int id = gid+lid;
+
+	int eV0 = (int) edgesv0[lid];
+	int eV1 = (int) edgesv1[lid];
+	int eF0 = (int) edgesf0[lid];
+	int eF1 = (int) edgesf1[lid];
+
+	float3 p = (float3) (0.0f, 0.0f, 0.0f);
+	float3 vP0 = (float3) (verts[3*eV0], verts[(3*eV0)+1], verts[(3*eV0)+2]);
+	float3 vP1 = (float3) (verts[3*eV1], verts[(3*eV1)+1], verts[(3*eV1)+2]);
+	float3 vP2 = (float3) (verts[3*facesFvert[eF0]], verts[3*facesFvert[eF0]+1], verts[3*facesFvert[eF0]+2]);
+	float3 vP3 = (float3) (verts[3*facesFvert[eF1]], verts[3*facesFvert[eF1]+1], verts[3*facesFvert[eF1]+2]);
+
+    p=SumVectorF(p,vP0);
+ 	p=SumVectorF(p,vP1);
+	p=SumVectorF(p,vP2);
+	p=SumVectorF(p,vP3);
+	p=ProdVectorF((0.25f), p);
+	outPoints[3*lid + 0] = p.x;
+	outPoints[3*lid + 1] = p.y;
+	outPoints[3*lid + 2] = p.z;
+	outEdgesEvert[lid] = get_global_size(0)+lid+2;
+}
 </script>
 
 
-<script id="GenVertexPoints" type ="x-kernel">
+<script id="genVertexPoints" type ="x-kernel">
+
+float3 SumVectorF(float3 a, float3 b)
+  	{	
+    	return a+b;
+  	}
+float3 MedVectorF(float3 a, float f, float3 b)
+	{
+		return a + (f*b);
+	}
+
+
+__kernel void genVertexPoints(
+	__global int * facesFvert,
+	__global float * verts,
+	__global int * vertsFace,
+	__global int * vertsEdges,
+	__global int * edgesv0,
+	__global int * edgesv1,
+	__global int * vertsNedge,
+	__global int * vertsEdOffset,
+	__global int * vertsNface)
+	{
+	unsigned int gid = get_group_id(0);;	
+	unsigned int lid = get_local_id(0);	
+	unsigned int id = gid+lid;
+	
+
+	int len = (int) vertsNface[id];
+	int len2 = (int) vertsNedge[id];
+
+
+	float3 point = (float3) (verts[3*id], verts[(3*id)+1], verts[(3*id)+2]);
+ 	float app = (float)((len -2.0f)/ len);
+
+	float3 newVecP = app*point.xyz;
+	float3 p= (float3) (0.0f, 0.0f, 0.0f);
+	int j;
+	int z;
+	int off=vertsEdOffset[id];
+	// cambiare da ed offset to face offset
+	for (j =0 ; j < len; j++) {
+	 	z =(int)facesFvert[vertsFace[off+j]];
+		float3 vP=(float3) (verts[3*z], verts[(3*z)+1], verts[(3*z)+2]);
+	 	p=SumVectorF(p,vP);
+	}
+
+	newVecP = MedVectorF(newVecP, 1.0f / (len * len), p);
+	p.xyz = (float3) (0.0f, 0.0f, 0.0f);
+	int ei;
+	for (int t = 0; t < vertsNedge[id]; t++) {
+  	   	off = vertsEdOffset[id];	
+	 	ei = vertsEdges[off+t];
+	
+		if(edgesv0[ei]==(id)){
+	  		z = edgesv1[ei];
+	   	}
+	   	else {
+	   		z = edgesv0[ei];
+	   	}
+	   	float3 vP = (float3) (verts[3*z], verts[(3*z)+1], verts[(3*z)+2]);
+	   	p=SumVectorF(p,vP);
+	}
+	newVecP = MedVectorF(newVecP, 1.0f / (len * len), p);
+	verts[3*id + 0] = newVecP.x;
+	verts[3*id + 1] = newVecP.y;
+	verts[3*id + 2] = newVecP.z;
+
+	
+}
 </script>
+
 
 
 
@@ -119,10 +241,16 @@ __kernel void GenFacePoints(
 <script src="Mesh.js"></script>
 <script src="Model.js"></script>
 <script src="Subdivider.js"></script>
+<script src="WebCLController.js"></script>
+<script src="ParallelProcedures/GenFacePoints.js"></script>
+<script src="ParallelProcedures/GenEdgePoints.js"></script>
+<script src="ParallelProcedures/GenVertexPoints.js"></script>
 <script src="ParallelSubdivider.js"></script>
 <script src="Util/build/PhiloGL.js"></script>
 <script src="Controller.js"></script>
 <script src="WebGlDrawer.js"></script>
+<script src="Controller.js"></script>
+<script src="index.js"></script>
 
 </head>
   

@@ -52,7 +52,7 @@ Controller.prototype.add_obj = function(file,nr_levels){
 
 Controller.prototype.InitModels= function(){
   console.log("Adding a Cube");
-  this.add_obj("objs/cube.obj",5);
+  this.add_obj("objs/cube.obj",6);
   console.log("Cube added");
 
   // console.log("Adding a Tetrahedron");
