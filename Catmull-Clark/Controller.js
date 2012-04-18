@@ -18,7 +18,7 @@ exports.Controller = function (){
   }
   this.models=[];
   this.current_model= 0;
-  this.wireframe= false;
+  this.wireframe= true;
 
 
   this.js_simMode     = false;
@@ -90,7 +90,7 @@ Controller.prototype.add_obj = function(file,nr_levels){
 Controller.prototype.InitModels= function(){
   var tStart = new Date().valueOf();
   console.log("Adding a Cube");
-  this.add_obj("objs/cube.obj",4);
+  this.add_obj("objs/cube.obj",3);
   console.log("Cube added");
 
   // console.log("Adding a Tetrahedron");
@@ -119,9 +119,10 @@ Controller.prototype.render = function (){
     this.webGlDrawer.tickWireframe();
   
   }
-  //this.webGlDrawer.mesh_renderText();
- 
-  this.webGlDrawer.tick();
+  else {
+    //this.webGlDrawer.mesh_renderText();
+    this.webGlDrawer.tick();
+  }
 }
 
 

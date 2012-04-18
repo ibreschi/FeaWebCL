@@ -315,6 +315,57 @@ WebGlDrawer.prototype.drawScene = function (){
     cube.update();
     //get new view matrix out of element and camera matrices
     view.mulMat42(camera.view, cube.matrix);
+    //set attributes, indices and textures
+    program.program1.setBuffer('aVertexPositionz').setBuffer('indices');
+    // set uniforms
+    program.program1.setUniform('uMVMatrix', view)
+           .setUniform('uPMatrix', camera.projection);
+    // draw lines
+    gl.drawElements(gl.LINES, cube.indices.length, gl.UNSIGNED_SHORT, 0);
+
+   }
+  
+  gl.useProgram(program.program2.program);
+  poin.position.set(0, 0, this.z);
+  poin.rotation.set(this.xRot, this.yRot, 0);
+  //update element matrix
+  poin.update();
+  //get new view matrix out of element and camera matrices
+  view.mulMat42(camera.view, poin.matrix);
+  //set attributes, indices and textures
+  //set uniforms
+  program.program2.setUniform('uMVMatrix', view)
+           .setUniform('uPMatrix', camera.projection);
+
+  program.program2.setBuffer('position').setBuffer('ind');
+  
+  gl.drawArrays(gl.POINTS, 0, this.poin.vertices.length/3); 
+  //gl.drawElements(gl.TRIANGLES,  this.poin.indices.length, gl.UNSIGNED_SHORT,0); 
+  //gl.drawElements(gl.LINES,  this.poin.indices.length, gl.UNSIGNED_SHORT,0); 
+  
+
+
+}
+
+
+WebGlDrawer.prototype.drawSceneWire = function (){
+  var gl = this.gl;
+  var cube = this.cube;
+  var view = this.view;
+  var poin = this.poin;
+  var program = this.program;
+  var camera = this.camera;
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  // //draw Cube
+  if(this.controller.is3D) {
+    gl.useProgram(program.program1.program);
+    cube.position.set(0, 0, this.z);
+    cube.rotation.set(this.xRot, this.yRot, 0);
+    //update element matrix
+    cube.update();
+    //get new view matrix out of element and camera matrices
+    view.mulMat42(camera.view, cube.matrix);
     // //set attributes, indices and textures
     program.program1.setBuffer('aVertexPositionz').setBuffer('indices');
     // //set uniforms
@@ -337,14 +388,12 @@ WebGlDrawer.prototype.drawScene = function (){
   program.program2.setUniform('uMVMatrix', view)
            .setUniform('uPMatrix', camera.projection);
 
-  //program.program2.setBuffer('position');
   program.program2.setBuffer('position').setBuffer('ind');
   
   //gl.drawArrays(gl.POINTS, 0, this.poin.vertices.length/3); 
   //gl.drawElements(gl.TRIANGLES,  this.poin.indices.length, gl.UNSIGNED_SHORT,0); 
   gl.drawElements(gl.LINES,  this.poin.indices.length, gl.UNSIGNED_SHORT,0); 
   
-  //console.log(this.poin);  
 
 }
 WebGlDrawer.prototype.mesh_renderText= function(){
@@ -375,6 +424,16 @@ WebGlDrawer.prototype.mesh_renderText= function(){
 
 WebGlDrawer.prototype.tick = function(){
   this.drawScene();
+  this.animate();
+  that =this;
+  PhiloGL.Fx.requestAnimationFrame(function callback(){
+    that.controller.render();
+    }
+  );
+}
+
+WebGlDrawer.prototype.tickWireframe = function(){
+  this.drawSceneWire();
   this.animate();
   that =this;
   PhiloGL.Fx.requestAnimationFrame(function callback(){

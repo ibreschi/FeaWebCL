@@ -18,7 +18,7 @@ exports.Controller = function (){
   }
   this.models=[];
   this.current_model= 0;
-  this.wireframe= 0;
+  this.wireframe= true;
 
 
   this.js_simMode     = true;
@@ -49,7 +49,6 @@ Controller.prototype.InitController = function ()
   }
   else {
     // start the CL subdivider engine
-    //NBODY = 4 * GetWorkGroupSize() ;
     this.subdivider= WebCLProgram();
     this.subdivider.InitWebCL();
     this.SetMode(this.js_simMode);
@@ -91,20 +90,22 @@ Controller.prototype.add_obj = function(file,nr_levels){
 Controller.prototype.InitModels= function(){
   var tStart = new Date().valueOf();
   console.log("Adding a Cube");
-  this.add_obj("objs/cube.obj",4);
+  this.add_obj("objs/cube.obj",5);
   console.log("Cube added");
-  // console.log("Adding a Teapot");
-  // this.add_obj("objs/teapot.obj",3);
-  // // console.log("Cube Teapot");
-  //  console.log("Adding a Tetrahedron");
-  // this.add_obj("objs/tetra.obj",5);
-  // console.log("Tetrahedron added");
-  // console.log("Adding a Bigguy");
-  // this.add_obj("objs/bigguy.obj",3);
-  // console.log("Bigguy added");
-  // console.log("Adding a Monsterfrog");
-  // this.add_obj("objs/monsterfrog.obj",3);
-  // console.log("Monsterfrog added");
+   console.log("Adding a Tetrahedron");
+  this.add_obj("objs/tetra.obj",5);
+  console.log("Tetrahedron added");
+  console.log("Adding a Bigguy");
+  this.add_obj("objs/bigguy.obj",3);
+  console.log("Bigguy added");
+  console.log("Adding a Monsterfrog");
+  this.add_obj("objs/monsterfrog.obj",3);
+  console.log("Monsterfrog added");
+
+  ////  a teapot is impossible to draw couse it is not a correct mash
+  //// console.log("Adding a Teapot");
+  //// this.add_obj("objs/teapot.obj",3);
+  //// console.log("Cube Teapot");
   var tEnd = new Date().valueOf();
   console.log("total Time :",tEnd-tStart);
 
@@ -113,22 +114,14 @@ Controller.prototype.InitModels= function(){
 };
 Controller.prototype.render = function (){
   var model = this.models[this.current_model];
-  // glPushAttrib(GL_LIGHTING_BIT | GL_POLYGON_BIT);
-  // glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,
-  //        (GLfloat[4]) { 1.0f, 1.0f, 1.0f, 1.0f });
 
   if (this.wireframe) {
-    //SETUP OF 
-  //     glDisable(GL_LIGHTING);
-  //     glColor3f(0.0f, 1.0f, 0.0f);
-  //     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    this.webGlDrawer.tickWireframe();
   }
-  // DRAW THE CURRENT LEVEL OF THE MODEL IN NORMAL MODE
-  //glCallList(ed_obj->lists + ed_obj->cur_level);
-
-  // glPopAttrib();
-  //this.webGlDrawer.mesh_renderText();
-  this.webGlDrawer.tick();
+  else{
+    //this.webGlDrawer.mesh_renderText();
+    this.webGlDrawer.tick();
+  }
 }
 
 

@@ -145,7 +145,6 @@ ParallelSubdivider.prototype.get_edge= function(v0, v1){
     if ((v_0 == v0 && v_1 == v1) ||  (v_0 == v1 && v_1 == v0))
       return ei;
   };
-  console.log("error" , v0 ,v1 ,this.vertsEdOffset[v0], this.vertsEdges ,this.edgesv0 ,this.edgesv1);
  return -1;
 }
 
@@ -212,13 +211,13 @@ ParallelSubdivider.prototype.do_iteration= function(last_iteration){
 
   // VertexPoint Procedure
   
-  // var tVPStart = new Date().valueOf();
-  // this.genVertexPoints.SetData([this.facesFvert,this.verts, this.vertsFaces ,this.vertsEdges,this.edgesv0, this.edgesv1,this.vertsNed, this.vertsEdOffset, this.vertsNfa ,this.oldLen]);
-  // this.genVertexPoints.RunProgram();
-  // var tVPEnd = new Date().valueOf();
-  // ris =this.genVertexPoints.GetResults();
-  // //ccco= ris[0];
-  // this.verts =ris[0];
+  var tVPStart = new Date().valueOf();
+  this.genVertexPoints.SetData([this.facesFvert,this.verts, this.vertsFaces ,this.vertsEdges,this.edgesv0, this.edgesv1,this.vertsNed, this.vertsEdOffset2, this.vertsNfa ,this.oldLen]);
+  this.genVertexPoints.RunProgram();
+  var tVPEnd = new Date().valueOf();
+  ris =this.genVertexPoints.GetResults();
+  ccco= ris[0];
+  this.verts =ris[0];
  
   console.log(tFPEnd-tFPStart ," ms for genFacePoints");
   console.log(tEPEnd-tEPStart ," ms for genEdgePoints");

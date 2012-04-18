@@ -383,7 +383,7 @@ WebGlDrawer.prototype.drawSceneWire = function (){
            .setUniform('uPMatrix', camera.projection);
   program.program2.setBuffer('position').setBuffer('ind');
   
-  gl.drawArrays(gl.POINTS, 0, this.poin.vertices.length/3); 
+  gl.drawElements(gl.LINES,  this.poin.indices.length, gl.UNSIGNED_SHORT,0); 
 
 }
 WebGlDrawer.prototype.mesh_renderText= function(){
@@ -409,7 +409,6 @@ WebGlDrawer.prototype.mesh_renderText= function(){
     }
   }
 }
-
 
 
 WebGlDrawer.prototype.tick = function(){
