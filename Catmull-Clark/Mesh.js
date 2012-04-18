@@ -8,6 +8,7 @@ exports.Mesh = function (){
 
   this.vertexbuf = [];
   this.normalbuf = [];
+  this.normalbuf2 = [];
   this.indexbuf = [];
   this.faces = [];
 };
@@ -51,12 +52,9 @@ Mesh.prototype.begin_face= function()
 
 Mesh.prototype.add_index= function(vi,ni)
 {
-  var idx;
-  idx={ 
-    vi: vi,
-    ni: ni
-  };
-  this.indexbuf.push(idx);
+  this.indexbuf.push(vi);
+  this.normalbuf2.push(ni);
+
 }
 
 Mesh.prototype.face_vertex_count= function(face)
@@ -75,9 +73,8 @@ Mesh.prototype.face_vertex_index= function(face, vert)
 {
   var beg,idx;
   beg = this.faces[face];
-  idx = this.indexbuf[beg + vert];
-  vertex_idx = idx.vi;
-  normal_idx = idx.ni;
+  vertex_idx = this.indexbuf[beg + vert];
+  normal_idx = this.normalbuf2[beg + vert];
   return [vertex_idx,normal_idx,normal_idx]
 }
 // deve ritornare un vettore
@@ -104,8 +101,9 @@ Mesh.prototype.compute_normals= function() {
 
 
   for (var k = 0; k < this.indexbuf.length; k++) {
-    idx =this.indexbuf[k];
-    idx.ni =idx.vi;
+    //idx =this.indexbuf[k];
+    //idx.ni =idx.vi;
+    this.normalbuf2[k]= this.indexbuf[k];
   };
   var u,v,n;
   nr_faces = this.faces.length;

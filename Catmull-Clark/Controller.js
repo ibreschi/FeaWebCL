@@ -18,7 +18,7 @@ exports.Controller = function (){
   }
   this.models=[];
   this.current_model= 0;
-  this.wireframe= 0;
+  this.wireframe= false;
 
 
   this.js_simMode     = false;
@@ -44,7 +44,7 @@ Controller.prototype.InitController = function ()
   
   // start the JS subdivider engine
   if (this.js_simMode){
-    this.subdivider= new Subdivider();
+    this.subdivider=Subdivider();
     this.SetMode(this.js_simMode);
   }
   else {
@@ -114,17 +114,13 @@ Controller.prototype.render = function (){
   // glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,
   //        (GLfloat[4]) { 1.0f, 1.0f, 1.0f, 1.0f });
 
-  if (this.wireframe) {
-    //SETUP OF 
-  //     glDisable(GL_LIGHTING);
-  //     glColor3f(0.0f, 1.0f, 0.0f);
-  //     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  }
-  // DRAW THE CURRENT LEVEL OF THE MODEL IN NORMAL MODE
-  //glCallList(ed_obj->lists + ed_obj->cur_level);
 
-  // glPopAttrib();
+  if (this.wireframe) {
+    this.webGlDrawer.tickWireframe();
+  
+  }
   //this.webGlDrawer.mesh_renderText();
+ 
   this.webGlDrawer.tick();
 }
 
@@ -184,14 +180,12 @@ Controller.prototype.SetMode= function(isJs) {
   var div = document.getElementById("sim");
   if(isJs){
     div.firstChild.nodeValue =  "JS";
-    // do stuff to init js
   }
   else {
     div.firstChild.nodeValue = (this.subdivider.webCLController === undefined)? "NA" : "CL";
-    // du stuff to init cl
   }
   var div = document.getElementById("drw");
-  div.firstChild.nodeValue = (this.gl === null)? "NA" : "GL";
+  div.firstChild.nodeValue = (this.webGlDrawer === null)? "NA" : "GL";
 };
 
 Controller.prototype.ToggleSimRunning=function(){
@@ -200,6 +194,15 @@ Controller.prototype.ToggleSimRunning=function(){
 
 Controller.prototype.Toggle3D=function(){
   this.is3D = !this.is3D;
+  // if (this.webGlDrawer===null){
+  //   console.log("initWebGL...");
+  //   this.webGlDrawer  = new WebGlDrawer();
+  //   this.webGlDrawer.init("canvasCC",this); 
+  //   this.render();
+  // }
+  // if(is3D){
+  //   this.render();
+  // }
 }
 
 

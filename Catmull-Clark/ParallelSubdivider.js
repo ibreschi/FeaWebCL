@@ -26,6 +26,7 @@ exports.ParallelSubdivider = function (){
   this.vertsNfa =[];
 
   this.vertsEdOffset=[];
+  this.vertsEdOffset2 = [];
   this.oldLen=0;
 
   // Edge Data 
@@ -52,7 +53,7 @@ ParallelSubdivider.prototype.initParallel = function (){
 
 }
 ParallelSubdivider.prototype.update_links = function(){
-  var len = 4;
+  
   var vertsEdges= [];
   var vertsFaces= [];
   for (var i = 0; i < this.verts.length/3; i++) {
@@ -63,12 +64,14 @@ ParallelSubdivider.prototype.update_links = function(){
     this.vertsNfa[i] = 0;
   };
 
+  var len = 4;
+
   var edgesf0 = [];
   var edgesf1= [];
   var edgesv0 = [];
   var edgesv1= [];
   var edgesevert= [];
-  // console.log(this.facesVs.length);
+
   for (var i = 0; i < this.facesVs.length ; i++){
       var v0, v1, ei;
       v0 = this.facesVs[i];
@@ -94,15 +97,20 @@ ParallelSubdivider.prototype.update_links = function(){
           edgesf1[ei]=Math.floor(i/4);
         }
   }
-
   // ok vertsEdges
   // ok vertsFaces
   for(var i = 1; i < this.vertsNed.length; i++) {
     this.vertsEdOffset[i]=this.vertsNed[i]+this.vertsEdOffset[i-1];
   }
-  // console.log(this.vertsEdOffset);
-  // console.log(this.vertsNed);
-  // console.log(this.vertsNfa);
+
+  var vertsEdOffset=[];
+  vertsEdOffset[0] =3;
+  for (var i =1 ; i<this.vertsNed.length-1;i++){
+    vertsEdOffset[i]=this.vertsNed[i]+vertsEdOffset[i-1];
+  }
+  vertsEdOffset = [0].concat(vertsEdOffset);
+  this.vertsEdOffset2=vertsEdOffset;
+
   this.vertsEdges=new Int32Array(flatList(vertsEdges));
   this.vertsFaces=new Int32Array(flatList(vertsFaces)); 
 
@@ -128,14 +136,16 @@ ParallelSubdivider.prototype.find_edge= function(vertsEdges,edgesv0,edgesv1,v0, 
 }
 ParallelSubdivider.prototype.get_edge= function(v0, v1){
   var ei , v_0,v_1, offset ;
-  offset =this.vertsEdOffset[v0];
+  offset =this.vertsEdOffset2[v0];
   for (var i = 0; i < this.vertsNed[v0]; i++) {
-    ei =this.vertsEdges[offset+i];
+
+    ei =this.vertsEdges[(offset)+i];
     v_0 = this.edgesv0[ei];
     v_1 = this.edgesv1[ei];
     if ((v_0 == v0 && v_1 == v1) ||  (v_0 == v1 && v_1 == v0))
       return ei;
   };
+  console.log("error" , v0 ,v1 ,this.vertsEdOffset[v0], this.vertsEdges ,this.edgesv0 ,this.edgesv1);
  return -1;
 }
 
@@ -202,17 +212,17 @@ ParallelSubdivider.prototype.do_iteration= function(last_iteration){
 
   // VertexPoint Procedure
   
-  var tVPStart = new Date().valueOf();
-  this.genVertexPoints.SetData([this.facesFvert,this.verts, this.vertsFaces ,this.vertsEdges,this.edgesv0, this.edgesv1,this.vertsNed, this.vertsEdOffset, this.vertsNfa ,this.oldLen]);
-  this.genVertexPoints.RunProgram();
-  var tVPEnd = new Date().valueOf();
-  ris =this.genVertexPoints.GetResults();
-  //ccco= ris[0];
-  this.verts =ris[0];
+  // var tVPStart = new Date().valueOf();
+  // this.genVertexPoints.SetData([this.facesFvert,this.verts, this.vertsFaces ,this.vertsEdges,this.edgesv0, this.edgesv1,this.vertsNed, this.vertsEdOffset, this.vertsNfa ,this.oldLen]);
+  // this.genVertexPoints.RunProgram();
+  // var tVPEnd = new Date().valueOf();
+  // ris =this.genVertexPoints.GetResults();
+  // //ccco= ris[0];
+  // this.verts =ris[0];
  
   console.log(tFPEnd-tFPStart ," ms for genFacePoints");
   console.log(tEPEnd-tEPStart ," ms for genEdgePoints");
-  console.log(tVPEnd-tVPStart ," ms for genVertexPoints");
+  // console.log(tVPEnd-tVPStart ," ms for genVertexPoints");
   console.log("-----End-----");
 
   var new_face;
@@ -224,13 +234,14 @@ ParallelSubdivider.prototype.do_iteration= function(last_iteration){
   var kkk;
 
    /*2. Create new faces */
-  // per il cubo è sempre 4 gestire altri casi!!
+   // a new face has always 4 verts 
   for (j = 0; j < this.facesVs.length; j++) {
     v0 = this.facesVs[(4*Math.floor(j/4))+(j-1+4)%4];
     v = this.facesVs[(4*Math.floor(j/4))+j%4];
     v1 = this.facesVs[(4*Math.floor(j/4))+(j+1)%4];
     e0Ev = this.edgesEvert[this.get_edge( v0, v)];
     e1Ev = this.edgesEvert[this.get_edge( v, v1)];
+    //console.log(v0,v,v1);
     facesVs.push(e0Ev);
     facesVs.push(v);
     facesVs.push(e1Ev);
@@ -264,12 +275,11 @@ ParallelSubdivider.prototype.convert=function(){
   var mesh = new Mesh();
 
    mesh.vertexbuf =this.verts;
-  
-  // probably some problem  
+  // probably some problems 
   for (i = 0; i < this.facesVs.length/4; i++){
       mesh.begin_face();
-      for (var j = 0; j < 4; j++) {
-        mesh.add_index(this.facesVs[i+j], -1);
+      for (j = 0; j < 4; j++) {
+        mesh.add_index(this.facesVs[4*i+j], -1);
      };
   }
   mesh.compute_normals();

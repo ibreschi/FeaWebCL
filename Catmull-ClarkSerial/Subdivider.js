@@ -49,7 +49,7 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
     this.do_iteration( i==nr_levels - 1 );
     levels[i] = this.convert();
 	}
-	this.destroy();
+	//this.destroy();
 	return levels;
 }
 
@@ -122,7 +122,6 @@ Subdivider.prototype.update_links= function(){
       var v0, v1, ei;
 
       v0 = Sub_faces[i].vs[j];
-      
       v1 = Sub_faces[i].vs[(j+1) % Sub_faces[i].vs.length];
       this.verts[v0].faces.push(Sub_faces[i]);
       ei = this.find_edge(v0, v1);
@@ -192,6 +191,10 @@ Subdivider.prototype.do_iteration= function(last_iteration){
     p=[0,0,0];
     e = this.edges[i];
 
+    if (e.f1 ==-1){
+      console.log("will cause an error every edge should hace 2 faces ");
+      break;
+    }
     vec_add(p, p, this.verts[e.v0].vectorP);
     vec_add(p, p, this.verts[e.v1].vectorP);
     vec_add(p, p, this.verts[this.faces[e.f0].fvert].vectorP);
@@ -203,32 +206,32 @@ Subdivider.prototype.do_iteration= function(last_iteration){
   var n,appog,z;
   /* Move old vertices */
   // it moves and works only  with the old vertices
-  for (var i = 0; i < V; i++) {
-    v = this.verts[i];
-    n = v.faces.length;
-    appog=(n - 2) / n;
-    vec_copy(v.vectorNewP, v.vectorP);
-    vec_mul(v.vectorNewP, appog, v.vectorNewP);
+  // for (var i = 0; i < V; i++) {
+  //   v = this.verts[i];
+  //   n = v.faces.length;
+  //   appog=(n - 2) / n;
+  //   vec_copy(v.vectorNewP, v.vectorP);
+  //   vec_mul(v.vectorNewP, appog, v.vectorNewP);
       
-    p= [0,0,0];
-    for (var k = 0; k < v.faces.length; k++) {
-      z=v.faces[k].fvert ;
-      vec_add(p, p, this.verts[z].vectorP);
-    };
+  //   p= [0,0,0];
+  //   for (var k = 0; k < v.faces.length; k++) {
+  //     z=v.faces[k].fvert ;
+  //     vec_add(p, p, this.verts[z].vectorP);
+  //   };
     
-    vec_mad(v.vectorNewP, 1.0 / (n * n), p);
+  //   vec_mad(v.vectorNewP, 1.0 / (n * n), p);
 
-    p= [0,0,0];
-    for (var t = 0; t < v.edges.length; t++) {
-      ei=v.edges[t];
-      vec_add(p, p, this.edge_other(this.edges[ei], i).vectorP);
-    };
-    vec_mad(v.vectorNewP, 1.0 / (n * n), p);
-  };
-  for (var i = 0; i < V; i++) {
-    v = this.verts[i];
-     vec_copy(v.vectorP, v.vectorNewP);
-  };
+  //   p= [0,0,0];
+  //   for (var t = 0; t < v.edges.length; t++) {
+  //     ei=v.edges[t];
+  //     vec_add(p, p, this.edge_other(this.edges[ei], i).vectorP);
+  //   };
+  //   vec_mad(v.vectorNewP, 1.0 / (n * n), p);
+  // };
+  // for (var i = 0; i < V; i++) {
+  //   v = this.verts[i];
+  //    vec_copy(v.vectorP, v.vectorNewP);
+  // };
   var tEnd = new Date().valueOf();
   console.log(tEnd-tStart ," ms for do iteration");
   // console.log(
@@ -241,15 +244,21 @@ Subdivider.prototype.do_iteration= function(last_iteration){
   var e1;
   var v0,v,v1;
 
-  //  2. Create new faces 
+  //  2. Create new faces
+  // console.log("mao");
+  // console.log(
+  //   this.verts.reduce(function(previousValue, currentValue, index, array){  
+  // return previousValue.concat( currentValue.edges);}, [])
+    // );
   for (var i = 0; i < F; i++) {
      f=this.faces[i];
+     //console.log(f.vs.length);
      for (j = 0; j < f.vs.length; j++) {
       v0=f.vs[(j - 1 + f.vs.length) % f.vs.length];
       v  = f.vs[j];
       v1 = f.vs[(j + 1) % f.vs.length];
       e0 = this.edges[this.find_edge( v0, v)];
-      e1 = this.edges[this.find_edge( v, v1)];     
+      e1 = this.edges[this.find_edge( v, v1)];  
       new_face=new sdFace();
       new_face.vs.push(e0.evert);
       new_face.vs.push( v);
@@ -257,6 +266,7 @@ Subdivider.prototype.do_iteration= function(last_iteration){
       new_face.vs.push( f.fvert);
       new_face.fvert = -1;
       faces.push(new_face);
+      //console.log(new_face.vs);
     };
    };
   this.faces=faces;
@@ -269,7 +279,6 @@ Subdivider.prototype.do_iteration= function(last_iteration){
   }
 
  }
-
 
 
 Subdivider.prototype.add_vert= function(p){
@@ -289,16 +298,14 @@ Subdivider.prototype.convert=function(){
   var face ;
 	var mesh = new Mesh();
 	for (i = 0; i < this.verts.length; i++)
-	 mesh.add_vertex(this.verts[i].vectorP);
-	
+	  mesh.add_vertex(this.verts[i].vectorP);
   for (i = 0; i < this.faces.length; i++){
       face = this.faces[i];
       mesh.begin_face();
       for (var j = 0; j < face.vs.length; j++) {
-        mesh.add_index(face.vs[i], -1);
+        mesh.add_index(face.vs[j], -1);
      };
 	};
-
   mesh.compute_normals();
 	return mesh;
 }

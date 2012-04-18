@@ -37,7 +37,6 @@ exports.GenVertexPoints = function (){
   this.inEdgesv0 = null;
   this.inEdgesv1 = null;
   this.inVertsEdOffset = null;
-  this.outPoints= null;  
   this.inVertsNfa = null;
 
   // Output Data
@@ -255,7 +254,6 @@ GenVertexPoints.prototype.Clean= function(){
   this.inVertsNed.releaseCLResource(); 
   this.inVertsEdOffset.releaseCLResource(); 
   this.inVertsNfa.releaseCLResource(); 
-  this.outPoints.releaseCLResource();
   this.queue.releaseCLResource();
   this.queue.releaseCLResource();
   this.queue.releaseCLResource();

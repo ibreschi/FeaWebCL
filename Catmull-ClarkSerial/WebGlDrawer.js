@@ -63,12 +63,17 @@ WebGlDrawer.prototype.init = function (canvasName,controller){
 
   var model = this.controller.currentModel();
   var punti = model.meshes[model.cur_level].vertexbuf;
+  var norm = model.meshes[model.cur_level].normalbuf;
+  // var ind = model.meshes[model.cur_level].indexbuf.reduce(function(previousValue, currentValue, index, array){  
+  //       return previousValue.concat( currentValue.vi);}, [])
+  var ind = model.meshes[model.cur_level].indexbuf;
+  var faces = model.meshes[model.cur_level].faces ;
   // Setting the Point model
   this.poin = new PhiloGL.O3D.Model({
     program:'program2',
     vertices : punti,
+    indices :ind
   });
-
   
   var that =this;
 	var keyPressFun = function(e) {
@@ -158,6 +163,11 @@ WebGlDrawer.prototype.init = function (canvasName,controller){
       'position': {
         value:   poin.vertices,
         size: 3
+      },
+      'ind':{
+        value: poin.indices,
+        bufferType: gl.ELEMENT_ARRAY_BUFFER,
+        size :1
       }
     });
   }
@@ -246,14 +256,23 @@ WebGlDrawer.prototype.focusCamera = function(){
 WebGlDrawer.prototype.changeMesh= function(){
   var model = this.controller.currentModel();
   var punti = model.meshes[model.cur_level].vertexbuf;
+  // console.log(model.meshes[model.cur_level].indexbuf.length);
+  var ind =  model.meshes[model.cur_level].indexbuf;
   var poin = this.poin;
+  var gl= this.gl;
   poin.vertices=punti;
+  poin.indices=ind;
   // set buffer with point data
   this.program.program2.setBuffers({
     'position': {
       value:   poin.vertices,
       size: 3
-    }
+    },
+      'ind':{
+        value: poin.indices,
+        bufferType: gl.ELEMENT_ARRAY_BUFFER,
+        size :1
+      }
   });
   this.focusCamera();
   var cube= this.cube;
@@ -318,8 +337,14 @@ WebGlDrawer.prototype.drawScene = function (){
   program.program2.setUniform('uMVMatrix', view)
            .setUniform('uPMatrix', camera.projection);
 
-  program.program2.setBuffer('position');
-  gl.drawArrays(gl.POINTS, 0, this.poin.vertices.length/3);   
+  //program.program2.setBuffer('position');
+  program.program2.setBuffer('position').setBuffer('ind');
+  
+  //gl.drawArrays(gl.POINTS, 0, this.poin.vertices.length/3); 
+  //gl.drawElements(gl.TRIANGLES,  this.poin.indices.length, gl.UNSIGNED_SHORT,0); 
+  gl.drawElements(gl.LINES,  this.poin.indices.length, gl.UNSIGNED_SHORT,0); 
+  
+  //console.log(this.poin);  
 
 }
 WebGlDrawer.prototype.mesh_renderText= function(){
