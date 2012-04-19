@@ -98,10 +98,10 @@ Controller.prototype.InitModels= function(){
   console.log("Tetrahedron added");
 
   // console.log("Adding a Bigguy");
-  // this.add_obj("objs/bigguy.obj",2);
+  // this.add_obj("objs/bigguy.obj",1);
   // console.log("Bigguy added");
   // console.log("Adding a Monsterfrog");
-  // this.add_obj("objs/monsterfrog.obj",3);
+  // this.add_obj("objs/monsterfrog.obj",2);
   // console.log("Monsterfrog added");
   var tEnd = new Date().valueOf();
   console.log("total Time :",tEnd-tStart);
