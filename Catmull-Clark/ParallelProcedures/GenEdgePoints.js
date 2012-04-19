@@ -189,6 +189,7 @@ GenEdgePoints.prototype.RunProgram =function (){
     kernel.setKernelArgGlobal(5, this.inEdgesf1);
     kernel.setKernelArgGlobal(6, this.outPoints);
     kernel.setKernelArgGlobal(7, this.outEdgesEvert);
+    kernel.setKernelArg(8, this.verts.length/3, cl.KERNEL_ARG_INT);
 
     queue.enqueueNDRangeKernel(kernel, 1, 0, this.globalWorkSize, this.localWorkSize, null);
 

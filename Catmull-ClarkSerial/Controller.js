@@ -89,18 +89,18 @@ Controller.prototype.add_obj = function(file,nr_levels){
 
 Controller.prototype.InitModels= function(){
   var tStart = new Date().valueOf();
-  console.log("Adding a Cube");
-  this.add_obj("objs/cube.obj",5);
-  console.log("Cube added");
-   console.log("Adding a Tetrahedron");
-  this.add_obj("objs/tetra.obj",5);
+  // console.log("Adding a Cube");
+  // this.add_obj("objs/cube.obj",5);
+  // console.log("Cube added");
+  console.log("Adding a Tetrahedron");
+  this.add_obj("objs/tetra.obj",2);
   console.log("Tetrahedron added");
-  console.log("Adding a Bigguy");
-  this.add_obj("objs/bigguy.obj",3);
-  console.log("Bigguy added");
-  console.log("Adding a Monsterfrog");
-  this.add_obj("objs/monsterfrog.obj",3);
-  console.log("Monsterfrog added");
+  // console.log("Adding a Bigguy");
+  // this.add_obj("objs/bigguy.obj",3);
+  // console.log("Bigguy added");
+  // console.log("Adding a Monsterfrog");
+  // this.add_obj("objs/monsterfrog.obj",3);
+  // console.log("Monsterfrog added");
 
   ////  a teapot is impossible to draw couse it is not a correct mash
   //// console.log("Adding a Teapot");

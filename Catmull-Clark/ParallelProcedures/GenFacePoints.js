@@ -67,7 +67,7 @@ GenFacePoints.prototype.SetData =function (args){
   this.facesFvert= args[1];
   this.verts = args[2];
   this.vertForFace= args[3];
-  console.log(this.vertForFace);
+
   this.workGroupSize=this.GetWorkGroupSize();
   this.globalWorkSize[0] = this.facesFvert.length ; 
   if (this.workGroupSize > this.facesFvert.length )
@@ -118,27 +118,6 @@ GenFacePoints.prototype.SetData =function (args){
       return null;
     }
 
-    // nxtVelBuffer = context.createBuffer(cl.MEM_READ_ONLY, bufferSize, null);
-    // if(nxtPosBuffer === null) {
-    //   console.error("Failed to allocate device memory");
-    //   return null;
-    // }
-    
-    // if(TEST==0){
-
-    //  console.log("--Test1--")
-    //  cpBufz1 = new Float32Array(bufferSize/4.0);
-    //  queue.enqueueReadBuffer(curPosBuffer,true,0,bufferSize,cpBufz1,null)
-    //  console.log("cpBufz1",cpBufz1[0],cpBufz1[1],cpBufz1[2],cpBufz1[3]);
-      
-    //  cvBufz1 = new Float32Array(bufferSize/4.0);
-    //  queue.enqueueReadBuffer(curVelBuffer,true,0,bufferSize,cvBufz1,null)
-    //  console.log("cvBufz1",cvBufz1[0],cvBufz1[1],cvBufz1[2],cvBufz1[3]);
-    //  console.log("----")
-
-    //  TEST=1;
-    // }
-
     this.outP= new Float32Array(this.facesFvert.length*3);
     queue.finish(function () { }, null);
   }
@@ -162,6 +141,7 @@ GenFacePoints.prototype.RunProgram =function (){
     kernel.setKernelArgGlobal(2, this.curVerts);
     kernel.setKernelArgGlobal(3, this.outPoints);
     kernel.setKernelArg(4, this.vertForFace, cl.KERNEL_ARG_INT);
+    kernel.setKernelArg(5, this.verts.length/3, cl.KERNEL_ARG_INT);
     queue.enqueueNDRangeKernel(kernel, 1, 0, this.globalWorkSize, this.localWorkSize, null);
     
     var that = this;

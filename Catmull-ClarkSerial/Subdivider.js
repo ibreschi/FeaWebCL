@@ -48,7 +48,7 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
     this.do_iteration( i==nr_levels - 1 );
     levels[i] = this.convert();
 	}
-	this.destroy();
+	// this.destroy();
 	return levels;
 }
 
@@ -116,7 +116,7 @@ Subdivider.prototype.update_links= function(){
   for (var i = 0; i < this.faces.length ; i++){
     Sub_faces[i] = this.faces[i];
     for (var j = 0; j < Sub_faces[i].vs.length; j++) {
-
+      // console.log(Sub_faces[i].vs.length);
       var v0, v1, ei;
 
       v0 = Sub_faces[i].vs[j];
@@ -174,15 +174,14 @@ Subdivider.prototype.do_iteration= function(last_iteration){
   for (var i = 0; i < F; i++) {
     face =this.faces[i];
     p= [0,0,0];
-    
     len = face.vs.length;
     for (var j = 0; j < len; j++) {
       vec_add(p,p,this.verts[face.vs[j]].vectorP);
     };
     vec_mul(p, (1.0 / len), p);
     face.fvert = this.add_vert(p);
-  };
 
+  };
 
   //  Create edge vertices 
   for (var i = 0; i < E; i++) {
@@ -199,6 +198,7 @@ Subdivider.prototype.do_iteration= function(last_iteration){
     vec_add(p, p, this.verts[this.faces[e.f1].fvert].vectorP);
     vec_mul(p, 0.25, p);
     e.evert = this.add_vert(p);
+    // console.log(e.evert , p);
   };
 
   var n,appog,z;
@@ -206,7 +206,9 @@ Subdivider.prototype.do_iteration= function(last_iteration){
   // it moves and works only  with the old vertices
   for (var i = 0; i < V; i++) {
     v = this.verts[i];
+
     n = v.faces.length;
+    // console.log(n);
     appog=(n - 2) / n;
     vec_copy(v.vectorNewP, v.vectorP);
     vec_mul(v.vectorNewP, appog, v.vectorNewP);
@@ -226,10 +228,10 @@ Subdivider.prototype.do_iteration= function(last_iteration){
     };
     vec_mad(v.vectorNewP, 1.0 / (n * n), p);
   };
-  for (var i = 0; i < V; i++) {
-     v = this.verts[i];
-      vec_copy(v.vectorP, v.vectorNewP);
-  };
+  // for (var i = 0; i < V; i++) {
+  //    v = this.verts[i];
+  //     vec_copy(v.vectorP, v.vectorNewP);
+  // };
   var tEnd = new Date().valueOf();
   console.log(tEnd-tStart ," ms for do iteration");
   var new_face;
@@ -258,7 +260,7 @@ Subdivider.prototype.do_iteration= function(last_iteration){
   this.faces=faces;
   faces=[];
 
-
+  //this.display();
   /* 3. Update edges */
   /* Skip on last iteration */
   if (!last_iteration) {	
@@ -296,6 +298,40 @@ Subdivider.prototype.convert=function(){
 	return mesh;
 }
 
+Subdivider.prototype.display =function(){
+
+  
+  console.log("Edges stuff:");
+  console.log(" The EdgesVerts ")
+  this.edges.forEach(function(a,b,c){ console.log( a.evert)});
+  console.log("  Faces0 of edge i ");
+  this.edges.forEach(function(a,b,c){ console.log( a.f0)});
+  console.log("  Faces1 of edge i ");
+   this.edges.forEach(function(a,b,c){ console.log( a.f1)});
+  console.log("  Vertex0 of edge i ");
+   this.edges.forEach(function(a,b,c){ console.log( a.v0)});
+  console.log("  Vertex1 of edge i  ");
+   this.edges.forEach(function(a,b,c){ console.log( a.v1)});
+  console.log("-----");
+  console.log("Vertices stuff");
+  console.log("  The verts ");
+   this.verts.forEach(function(a,b,c){ console.log( a.vectorP)});
+  console.log("  The edges of vert i ");
+  this.verts.forEach(function(a,b,c){ console.log( a.edges)});
+  console.log("  The faces of vert i ");
+  this.verts.forEach(function(a,b,c){ console.log( a.faces)});
+
+
+  console.log("-----");
+  console.log("Faces stuff");
+  console.log("  Fverts ");
+    this.faces.forEach(function(a,b,c){ console.log( a.fvert);});
+  console.log("  faceVs ");
+  this.faces.forEach(function(a,b,c){ console.log( a.vs);});
+  console.log("-----");
+
+
+}
 
 })(this);
 

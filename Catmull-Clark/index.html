@@ -81,24 +81,25 @@ float3 ProdVectorF(float3 a, float3 b)
 		return a*b;
 	}
 
+// vorks for triangles and quad
 __kernel void genFacePoints(
 	__global int * facesVs,
 	__global int * facesFvert,
 	__global float * verts,
 	__global float * outPoints,
-		int len)
+		int len,
+		int vertLen)
 	{
 
-		// len va cambiato 
 	unsigned int gid = get_group_id(0);;	
 	unsigned int lid = get_local_id(0);	
 	unsigned int id = gid+lid;
 	float3 p= (float3) (0.0f, 0.0f, 0.0f);
-	int4 vertices = (int4) (facesVs[4*id],facesVs[4*id+1],facesVs[4*id+2],facesVs[4*id+3]);
 	float3 point;
+	int vn;
 	int j;
 	for (j = 0; j < len; ++j) {
-		int vn = (int)vertices[j];
+		vn = (int)facesVs[len*id+j];
 		point.xyz = (float3) (verts[3*vn], verts[(3*vn)+1], verts[(3*vn)+2]);
         p=SumVectorF(p,point);
 	}
@@ -106,8 +107,7 @@ __kernel void genFacePoints(
  	outPoints[3*id + 0] = p.x;
 	outPoints[3*id + 1] = p.y;
 	outPoints[3*id + 2] = p.z;
-	facesFvert[id] = get_global_size(0)+id+2;
-
+	facesFvert[id] = vertLen+id;
 }
 </script>
 
@@ -130,17 +130,18 @@ __kernel void genEdgePoints(
  	__global int * edgesf0,
   	__global int * edgesf1,
   	__global float * outPoints,
- 	__global int * outEdgesEvert)
+ 	__global int * outEdgesEvert,
+ 	int vertLen)
 	{
 
 	unsigned int gid = get_group_id(0);;	
 	unsigned int lid = get_local_id(0);	
 	unsigned int id = gid+lid;
 
-	int eV0 = (int) edgesv0[lid];
-	int eV1 = (int) edgesv1[lid];
-	int eF0 = (int) edgesf0[lid];
-	int eF1 = (int) edgesf1[lid];
+	int eV0 = (int) edgesv0[id];
+	int eV1 = (int) edgesv1[id];
+	int eF0 = (int) edgesf0[id];
+	int eF1 = (int) edgesf1[id];
 
 	float3 p = (float3) (0.0f, 0.0f, 0.0f);
 	float3 vP0 = (float3) (verts[3*eV0], verts[(3*eV0)+1], verts[(3*eV0)+2]);
@@ -153,10 +154,10 @@ __kernel void genEdgePoints(
 	p=SumVectorF(p,vP2);
 	p=SumVectorF(p,vP3);
 	p=ProdVectorF((0.25f), p);
-	outPoints[3*lid + 0] = p.x;
-	outPoints[3*lid + 1] = p.y;
-	outPoints[3*lid + 2] = p.z;
-	outEdgesEvert[lid] = get_global_size(0)+lid+2;
+	outPoints[3*id + 0] = p.x;
+	outPoints[3*id + 1] = p.y;
+	outPoints[3*id + 2] = p.z;
+	outEdgesEvert[id] = vertLen+id;
 }
 </script>
 
