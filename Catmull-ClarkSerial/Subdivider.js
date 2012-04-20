@@ -48,7 +48,7 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
     this.do_iteration( i==nr_levels - 1 );
     levels[i] = this.convert();
 	}
-	// this.destroy();
+	this.destroy();
 	return levels;
 }
 
@@ -228,10 +228,10 @@ Subdivider.prototype.do_iteration= function(last_iteration){
     };
     vec_mad(v.vectorNewP, 1.0 / (n * n), p);
   };
-  // for (var i = 0; i < V; i++) {
-  //    v = this.verts[i];
-  //     vec_copy(v.vectorP, v.vectorNewP);
-  // };
+  for (var i = 0; i < V; i++) {
+     v = this.verts[i];
+      vec_copy(v.vectorP, v.vectorNewP);
+  };
   var tEnd = new Date().valueOf();
   console.log(tEnd-tStart ," ms for do iteration");
   var new_face;
