@@ -52,10 +52,81 @@ ParallelSubdivider.prototype.initParallel = function (){
    
 
 }
+
+ParallelSubdivider.prototype.subdivide_levels = function(mesh,nr_levels){
+  var levels=[];
+  this.init(mesh);
+  for (i = 0; i < nr_levels; i++) {
+    this.do_iteration( i==nr_levels - 1 );
+    levels[i] = this.convert();
+  }
+  this.destroy();
+  return levels;
+}
+
+ParallelSubdivider.prototype.destroy =function(){
+  // cleaning verts
+  this.verts=null;
+  this.vertsEdges = null;
+  this.vertsFaces = null;
+  // cleaning edges
+  this.edgesEvert = null;
+  this.edgesf0 = null;
+  this.edgesf1 = null;
+  this.edgesv0 = null;
+  this.edgesv1 = null;
+  // cleaning faces
+  this.facesFvert = null;
+  this.facesVs = null;
+  // cleaning procedures
+  this.webCLController.cleanWebCL();
+  this.webCLController=null;
+  this.genEdgePoints = null;
+  this.genFacePoints = null;
+  this.genVertexPoints = null;
+}
+
+ParallelSubdivider.prototype.init = function(mesh){
+  var i, j, nr_verts, nr_faces;
+  var vbuf;
+  var f=[];
+  var vidx, nidx;
+  var Sub_vertices=[];
+  var subVert;
+
+  this.first_iteration = 1;
+
+  /* Create vertices */
+  this.verts = new Float32Array(mesh.vertexbuf);
+  var facesVs= [];
+  var facesFvert= [];
+  /* Create faces */
+  nr_faces = mesh.faces.length;
+
+   for (var k = 0; k < nr_faces; k++) {
+    nr_verts = mesh.face_vertex_count(k);
+     for (j = 0; j < nr_verts; j++) {
+        vidx =mesh.face_vertex_index(k, j)[0];
+        facesVs.push(vidx);
+      }
+      facesFvert.push(-1);
+  }
+  this.vertForFace =nr_verts;
+
+
+  this.facesVs = new Int32Array(facesVs);
+  this.facesFvert = new Int32Array(facesFvert);
+
+  /* Create edges */
+  this.update_links();
+}
+
+
 ParallelSubdivider.prototype.update_links = function(){
-  
+ 
   var vertsEdges= [];
   var vertsFaces= [];
+  console.log("verts",this.verts.length/3);
   for (var i = 0; i < this.verts.length/3; i++) {
     vertsEdges[i] =[];
     vertsFaces[i] =[];
@@ -150,46 +221,11 @@ ParallelSubdivider.prototype.get_edge= function(v0, v1){
 
 
 
-ParallelSubdivider.prototype.init = function(mesh){
-  var i, j, nr_verts, nr_faces;
-  var vbuf;
-  var f=[];
-  var vidx, nidx;
-  var Sub_vertices=[];
-  var subVert;
-
-  this.first_iteration = 1;
-
-  /* Create vertices */
-  this.verts = new Float32Array(mesh.vertexbuf);
-  var facesVs= [];
-  var facesFvert= [];
-  /* Create faces */
-  nr_faces = mesh.faces.length;
-
-   for (var k = 0; k < nr_faces; k++) {
-    nr_verts = mesh.face_vertex_count(k);
-     for (j = 0; j < nr_verts; j++) {
-        vidx =mesh.face_vertex_index(k, j)[0];
-        facesVs.push(vidx);
-      }
-      facesFvert.push(-1);
-  }
-  this.vertForFace =nr_verts;
-
-
-  this.facesVs = new Int32Array(facesVs);
-  this.facesFvert = new Int32Array(facesFvert);
-
-  /* Create edges */
-  this.update_links();
-}
-
 
 ParallelSubdivider.prototype.do_iteration= function(last_iteration){
 
   this.initParallel();
-  console.log("-----Start-----");
+  //console.log("-----Start-----");
   // FacePoint Procedure
   var tFPStart = new Date().valueOf();
   this.genFacePoints.SetData([this.facesVs,this.facesFvert,this.verts,this.vertForFace]);
@@ -218,10 +254,10 @@ ParallelSubdivider.prototype.do_iteration= function(last_iteration){
   ris =this.genVertexPoints.GetResults();
   this.verts =ris[0];
  
-  console.log(tFPEnd-tFPStart ," ms for genFacePoints");
-  console.log(tEPEnd-tEPStart ," ms for genEdgePoints");
-  console.log(tVPEnd-tVPStart ," ms for genVertexPoints");
-  console.log("-----End-----");
+  // console.log(tFPEnd-tFPStart ," ms for genFacePoints");
+  // console.log(tEPEnd-tEPStart ," ms for genEdgePoints");
+  // console.log(tVPEnd-tVPStart ," ms for genVertexPoints");
+  // console.log("-----End-----");
 
   var new_face;
   var e0Ev;
@@ -260,16 +296,7 @@ ParallelSubdivider.prototype.do_iteration= function(last_iteration){
 }
 
 
-ParallelSubdivider.prototype.subdivide_levels = function(mesh,nr_levels){
-  var levels=[];
-  this.init(mesh);
-  for (i = 0; i < nr_levels; i++) {
-    this.do_iteration( i==nr_levels - 1 );
-    levels[i] = this.convert();
-  }
-  //this.destroy();
-  return levels;
-}
+
 
 ParallelSubdivider.prototype.convert=function(){
   var i, j , vi;
@@ -284,31 +311,11 @@ ParallelSubdivider.prototype.convert=function(){
         mesh.add_index(this.facesVs[4*i+j], -1);
      };
   }
-  mesh.compute_normals();
+  //mesh.compute_normals();
   return mesh;
 }
 
-ParallelSubdivider.prototype.destroy =function(){
-  // cleaning verts
-  this.verts=null;
-  this.vertsEdges = null;
-  this.vertsFaces = null;
-  // cleaning edges
-  this.edgesEvert = null;
-  this.edgesf0 = null;
-  this.edgesf1 = null;
-  this.edgesv0 = null;
-  this.edgesv1 = null;
-  // cleaning faces
-  this.facesFvert = null;
-  this.facesVs = null;
-  // cleaning procedures
-  this.webCLController.cleanWebCL();
-  this.webCLController=null;
-  this.genEdgePoints = null;
-  this.genFacePoints = null;
-  this.genVertexPoints = null;
-}
+
 
 ParallelSubdivider.prototype.display =function(){
 

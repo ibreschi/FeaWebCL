@@ -194,6 +194,50 @@ WebGlDrawer.prototype.init = function (canvasName,controller){
 
   });
 }
+WebGlDrawer.prototype.setData = function (){
+  this.focusCamera();
+  //Create object
+  var xCube= this.xCube;
+  this.cube = new PhiloGL.O3D.Model({
+    program:'program1',
+    vertices: [ 
+      -xCube, -xCube, -xCube,   // 0
+      -xCube,  xCube, -xCube,   // 1
+      xCube,  xCube, -xCube,   // 2
+      xCube, -xCube, -xCube,   // 3
+      -xCube, -xCube,  xCube,   // 4 frontface
+      -xCube,  xCube,  xCube,   // 5
+      xCube,  xCube,  xCube,   // 6
+      xCube, -xCube,  xCube,   // 7
+      ],
+
+    indices:  [
+      0, 1,              // backface
+      1, 2,
+      2, 3,
+      3, 0,
+      4, 5,              // frontface
+      5, 6,
+      6, 7,
+      7, 4,
+      0, 4,              // back to front
+      1, 5,
+      2, 6,
+      3, 7]
+  });
+
+  var model = this.controller.currentModel();
+  var punti = model.meshes[model.cur_level].vertexbuf;
+  var norm = model.meshes[model.cur_level].normalbuf;
+  var ind = model.meshes[model.cur_level].indexbuf;
+  var faces = model.meshes[model.cur_level].faces ;
+  // Setting the Point model
+  this.poin = new PhiloGL.O3D.Model({
+    program:'program2',
+    vertices : punti,
+    indices :ind
+  });
+}
 
 WebGlDrawer.prototype.animate = function() {
 	this.xRot += this.xSpeed;

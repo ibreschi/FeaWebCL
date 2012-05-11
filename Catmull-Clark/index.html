@@ -91,7 +91,7 @@ __kernel void genFacePoints(
 		int vertLen)
 	{
 
-	unsigned int gid = get_group_id(0);;	
+	unsigned int gid = get_group_id(0);
 	unsigned int lid = get_local_id(0);	
 	unsigned int id = gid+lid;
 	float3 p= (float3) (0.0f, 0.0f, 0.0f);

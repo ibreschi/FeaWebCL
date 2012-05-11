@@ -18,7 +18,7 @@ exports.Controller = function (){
   }
   this.models=[];
   this.current_model= 0;
-  this.wireframe= true;
+  this.wireframe= false;
 
 
   this.js_simMode     = false;
@@ -42,6 +42,7 @@ Controller.prototype.InitController = function ()
     return;
   }
   
+  
   // start the JS subdivider engine
   if (this.js_simMode){
     this.subdivider=Subdivider();
@@ -61,6 +62,7 @@ Controller.prototype.InitController = function ()
   if (this.is3D){
     this.webGlDrawer  = new WebGlDrawer();
     this.webGlDrawer.init("canvasCC",this); 
+    this.webGlDrawer.setData();
   }
 
   this.SetStats();  
@@ -90,15 +92,15 @@ Controller.prototype.add_obj = function(file,nr_levels){
 Controller.prototype.InitModels= function(){
   var tStart = new Date().valueOf();
   console.log("Adding a Cube");
-  this.add_obj("objs/cube.obj",4);
+  this.add_obj("objs/cube.obj",6);
   console.log("Cube added");
 
-  console.log("Adding a Tetrahedron");
-  this.add_obj("objs/tetra.obj",4);
-  console.log("Tetrahedron added");
+  // console.log("Adding a Tetrahedron");
+  // this.add_obj("objs/tetra.obj",5);
+  // console.log("Tetrahedron added");
 
   // console.log("Adding a Bigguy");
-  // this.add_obj("objs/bigguy.obj",1);
+  // this.add_obj("objs/bigguy.obj",2);
   // console.log("Bigguy added");
   // console.log("Adding a Monsterfrog");
   // this.add_obj("objs/monsterfrog.obj",2);
@@ -110,9 +112,6 @@ Controller.prototype.InitModels= function(){
 };
 Controller.prototype.render = function (){
   var model = this.models[this.current_model];
-  // glPushAttrib(GL_LIGHTING_BIT | GL_POLYGON_BIT);
-  // glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,
-  //        (GLfloat[4]) { 1.0f, 1.0f, 1.0f, 1.0f });
 
 
   if (this.wireframe) {

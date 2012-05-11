@@ -136,9 +136,9 @@ WebGlDrawer.prototype.init = function (canvasName,controller){
     that.view = new PhiloGL.Mat4;
     cube = that.cube;
     gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0, 0, 0, 1);
+    //gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    gl.viewport(10, 10, canvas.width, canvas.height);
+    gl.clearColor(1,1 , 1, 0);
     gl.clearDepth(1);
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);

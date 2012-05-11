@@ -50,7 +50,8 @@ WebCLController.prototype.InitWebCL =function (){
     this.device_id = this.device_ids[0];
     // Create a compute context
     //
-    this.context = this.cl.createSharedContext(this.cl.DEVICE_TYPE_GPU, null, null);
+    //this.context = this.cl.createSharedContext(this.cl.DEVICE_TYPE_GPU, null, null);
+    this.context = this.cl.createContext(null, this.device_id, null, null);
     // Create a command queue
     //
     this.queue = this.context.createCommandQueue(this.device_id, null);

@@ -46,7 +46,7 @@ $(document).ready(function(){
 <script id="cube-fshader" type="x-shader/x-fragment">
 	precision mediump float;
 	void main() {
-		gl_FragColor = vec4(1, 0.8, 0.2, 1);
+		gl_FragColor = vec4(1, 1, 1, 1);
 	}
 </script>
 
@@ -63,7 +63,7 @@ $(document).ready(function(){
 <script id="point-fshader" type="x-shader/x-fragment">
 	precision mediump float;
 	void main() {
-		gl_FragColor = vec4(0.56, 0, 1, 1);
+		gl_FragColor = vec4(0, 0, 0, 1);
 	}
 </script>
 	
@@ -126,7 +126,7 @@ $(document).ready(function(){
   </div >
 <div class="className">
 <!-- canvas must be square since simulator works in normalized device coordinates -->
-	<canvas id="canvasCC" width="400" height="400"></canvas>
+	<canvas id="canvasCC" width="600" height="600"></canvas>
 
 <script src="index.js"></script>
 </div>

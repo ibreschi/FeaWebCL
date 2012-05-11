@@ -38,6 +38,7 @@ exports.Subdivider = function (){
   this.verts=[];
   this.faces=[];
   this.edges=[];
+  this.mao=0;
 };
 
 
@@ -49,6 +50,7 @@ Subdivider.prototype.subdivide_levels= function(mesh,nr_levels){
     levels[i] = this.convert();
 	}
 	this.destroy();
+   console.log(this.mao);
 	return levels;
 }
 
@@ -101,17 +103,16 @@ Subdivider.prototype.init = function(mesh){
 }
 
 Subdivider.prototype.update_links= function(){
+   this.mao++;
   var Sub_vertices = [];
   var Sub_faces= [];
   var subFace;
   var edge;
-
   for (var i = 0; i < this.verts.length; i++) {
     this.verts[i].edges=[];
     this.verts[i].faces =[];
   };
   this.edges=[];
-
 
   for (var i = 0; i < this.faces.length ; i++){
     Sub_faces[i] = this.faces[i];
@@ -233,7 +234,7 @@ Subdivider.prototype.do_iteration= function(last_iteration){
       vec_copy(v.vectorP, v.vectorNewP);
   };
   var tEnd = new Date().valueOf();
-  console.log(tEnd-tStart ," ms for do iteration");
+  //console.log(tEnd-tStart ," ms for do iteration");
   var new_face;
   var e0;
   var e1;

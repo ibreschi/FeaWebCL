@@ -191,6 +191,15 @@ Model.prototype.readFile = function(file){
   // for all line of the text
   for (var i = 0; i < this.text.length; i++) {
     line = this.text[i];
+
+    // Skip empty or comment lines.
+    //
+    // if (!str || str[0] == "\0" || str[0] == "#")
+    //   continue;
+    // if (str[0] == 'g' || str[0] == 'o' || str[0] == 's' || strcmp(str, "usemtl") == 0 || strcmp(str, "mtllib") == 0)
+    //   continue;
+
+
     if (line[0]=="v" && line[1]!=="n") {
       /* Vertex command */
       values =getValues(line);
