@@ -91,9 +91,7 @@ __kernel void genFacePoints(
 		int vertLen)
 	{
 
-	unsigned int gid = get_group_id(0);
-	unsigned int lid = get_local_id(0);	
-	unsigned int id = gid+lid;
+	unsigned int id = get_global_id(0);	
 	float3 p= (float3) (0.0f, 0.0f, 0.0f);
 	float3 point;
 	int vn;
@@ -133,10 +131,8 @@ __kernel void genEdgePoints(
  	__global int * outEdgesEvert,
  	int vertLen)
 	{
-
-	unsigned int gid = get_group_id(0);;	
-	unsigned int lid = get_local_id(0);	
-	unsigned int id = gid+lid;
+	
+	unsigned int id = get_global_id(0);	
 
 	int eV0 = (int) edgesv0[id];
 	int eV1 = (int) edgesv1[id];
@@ -185,9 +181,7 @@ __kernel void genVertexPoints(
 	__global int * vertsEdOffset,
 	__global int * vertsNface)
 	{
-	unsigned int gid = get_group_id(0);;	
-	unsigned int lid = get_local_id(0);	
-	unsigned int id = gid+lid;
+	unsigned int id = get_global_id(0);	
 	
 
 	int len = (int) vertsNface[id];

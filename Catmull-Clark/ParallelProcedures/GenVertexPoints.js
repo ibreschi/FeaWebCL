@@ -58,28 +58,9 @@ GenVertexPoints.prototype.initProcedure= function(webCLProgram){
 
 
 }
-
-function hcf(text1,text2){
-  var gcd=1;
-  if (text1>text2) {
-    text1=text1+text2;
-    text2=text1-text2;
-    text1=text1-text2;}
-  if ((text2==(Math.round(text2/text1))*text1)) {
-    gcd=text1;
-  }
-  else {
-  for (var i = Math.round(text1/2) ; i > 1; i=i-1) {
-    if ((text1==(Math.round(text1/i))*i))
-    if ((text2==(Math.round(text2/i))*i)) {gcd=i; i=-1;}
-  }
-}
-return gcd;
-}
-
-function mao (a,b){
+function best (a,b){
   for(var i =b; i>0; i-- ){ 
-    if (a%i===0) 
+    if (a%i===0&& b%i===0 ) 
       return i;
   }
 }
@@ -102,15 +83,10 @@ GenVertexPoints.prototype.SetData =function (args){
   if (this.workGroupSize> this.oldVertLen)
     this.localWorkSize[0] = this.oldVertLen;
   else {
-    // var mcd = hcf(this.workGroupSize, this.vertsFaces.length/this.vFLen);
-    //this.localWorkSize[0] = Math.min(mcd)
-    var best = mao ( this.oldVertLen,this.workGroupSize);
-    this.localWorkSize[0] = best;
+    this.localWorkSize[0] = best (this.workGroupSize, this.oldVertLen);
     console.log( this.globalWorkSize[0], this.localWorkSize[0] ,this.workGroupSize, this.oldVertLen)
   }
    //console.log("GlobalWs: ", this.globalWorkSize[0],"LocalWs: ",this.localWorkSize[0] ,"NumEleto modify: ",this.oldVertLen);
-
-
   //console.log("GVp SetData :",this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));     
   
   var cl = this.cl;

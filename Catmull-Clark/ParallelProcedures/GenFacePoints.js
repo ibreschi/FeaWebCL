@@ -45,22 +45,11 @@ GenFacePoints.prototype.initProcedure= function(webCLProgram){
 
 }
 
-function hcf(text1,text2){
-  var gcd=1;
-  if (text1>text2) {
-    text1=text1+text2;
-    text2=text1-text2;
-    text1=text1-text2;}
-  if ((text2==(Math.round(text2/text1))*text1)) {
-    gcd=text1;
+function best (a,b){
+  for(var i =b; i>0; i-- ){ 
+    if (a%i===0&& b%i===0 ) 
+      return i;
   }
-  else {
-  for (var i = Math.round(text1/2) ; i > 1; i=i-1) {
-    if ((text1==(Math.round(text1/i))*i))
-    if ((text2==(Math.round(text2/i))*i)) {gcd=i; i=-1;}
-  }
-}
-return gcd;
 }
 GenFacePoints.prototype.SetData =function (args){
   this.facesVs = args[0];
@@ -73,7 +62,7 @@ GenFacePoints.prototype.SetData =function (args){
   if (this.workGroupSize > this.facesFvert.length )
     this.localWorkSize[0] = this.facesFvert.length ;
   else 
-    this.localWorkSize[0] = hcf(this.workGroupSize, this.facesFvert.length );
+    this.localWorkSize[0] = best(this.workGroupSize, this.facesFvert.length );
   //console.log(this.globalWorkSize[0],this.localWorkSize[0], this.facesFvert.length);
   //console.log("GFp SetData :", this.queue.getCommandQueueInfo(this.cl.QUEUE_REFERENCE_COUNT));
 

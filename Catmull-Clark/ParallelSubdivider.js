@@ -55,12 +55,24 @@ ParallelSubdivider.prototype.initParallel = function (){
 
 ParallelSubdivider.prototype.subdivide_levels = function(mesh,nr_levels){
   var levels=[];
+  var Start = new Date().valueOf();
   this.init(mesh);
+  var End = new Date().valueOf();
+  console.log("- Init time:", End-Start);
+  
+
   for (i = 0; i < nr_levels; i++) {
+    var Start = new Date().valueOf();
     this.do_iteration( i==nr_levels - 1 );
+    var End = new Date().valueOf();
+    console.log("--- Total Iteration: ",i, " time :", End-Start);
     levels[i] = this.convert();
   }
+  var Start = new Date().valueOf();
   this.destroy();
+  var End = new Date().valueOf();
+  console.log("- Destroy time:", End-Start);
+  
   return levels;
 }
 
@@ -123,10 +135,11 @@ ParallelSubdivider.prototype.init = function(mesh){
 
 
 ParallelSubdivider.prototype.update_links = function(){
- 
+  
+
+  var Start = new Date().valueOf();
   var vertsEdges= [];
   var vertsFaces= [];
-  console.log("verts",this.verts.length/3);
   for (var i = 0; i < this.verts.length/3; i++) {
     vertsEdges[i] =[];
     vertsFaces[i] =[];
@@ -135,6 +148,8 @@ ParallelSubdivider.prototype.update_links = function(){
     this.vertsNfa[i] = 0;
   };
 
+  var End = new Date().valueOf();
+  console.log("------------ linkUpdate : 1part time :", End-Start ," ms ");
   var len = this.vertForFace;
   var edgesf0 = [];
   var edgesf1= [];
@@ -142,6 +157,7 @@ ParallelSubdivider.prototype.update_links = function(){
   var edgesv1= [];
   var edgesevert= [];
 
+  var Start = new Date().valueOf();
   for (var i = 0; i < this.facesVs.length ; i++){
       var v0, v1, ei;
       v0 = this.facesVs[i];
@@ -167,8 +183,11 @@ ParallelSubdivider.prototype.update_links = function(){
           edgesf1[ei]=Math.floor(i/len);
         }
   }
+  var End = new Date().valueOf();
+  console.log("------------ linkUpdate : 2part time :", End-Start ," ms ");
   // ok vertsEdges
   // ok vertsFaces
+  var Start = new Date().valueOf();
   for(var i = 1; i < this.vertsNed.length; i++) {
     this.vertsEdOffset[i]=this.vertsNed[i]+this.vertsEdOffset[i-1];
   }
@@ -182,14 +201,25 @@ ParallelSubdivider.prototype.update_links = function(){
   this.vertsEdOffset2=vertsEdOffset;
   //console.log(this.vertsEdOffset2,this.vertsNed,this.vertsNfa);
 
-  this.vertsEdges=new Int32Array(flatList(vertsEdges));
-  this.vertsFaces=new Int32Array(flatList(vertsFaces)); 
-
+  var End = new Date().valueOf();
+  console.log("------------ linkUpdate : 3part time :", End-Start ," ms ");
+  var Start = new Date().valueOf();
+  var Start2 = new Date().valueOf();
+  
+  this.vertsEdges=new Int32Array(vertsEdges.flatten());
+  this.vertsFaces=new Int32Array(vertsFaces.flatten()); 
+  var End2 = new Date().valueOf();
+  console.log("--------------- flat inlinkUpdate : 4part time :", End2-Start2 ," ms ");
+  var Start2 = new Date().valueOf();
   this.edgesv0 = new Int32Array(edgesv0);
   this.edgesv1 = new Int32Array(edgesv1);
   this.edgesf0 = new Int32Array(edgesf0);
   this.edgesf1 = new Int32Array(edgesf1);
   this.edgesEvert = new Int32Array(edgesevert);
+  var End2 = new Date().valueOf();
+  console.log("--------------- creation of int32array inlinkUpdate : 4part time :", End2-Start2 ," ms ");
+   var End = new Date().valueOf();
+  console.log("------------ linkUpdate : 4part time :", End-Start ," ms ");
 
 }
 
@@ -206,8 +236,9 @@ ParallelSubdivider.prototype.find_edge= function(vertsEdges,edgesv0,edgesv1,v0, 
  return -1;
 }
 ParallelSubdivider.prototype.get_edge= function(v0, v1){
-  var ei , v_0,v_1, offset ;
+  var ei ,v_0 ,v_1 ,offset ;
   offset =this.vertsEdOffset2[v0];
+  
   for (var i = 0; i < this.vertsNed[v0]; i++) {
 
     ei =this.vertsEdges[(offset)+i];
@@ -254,11 +285,12 @@ ParallelSubdivider.prototype.do_iteration= function(last_iteration){
   ris =this.genVertexPoints.GetResults();
   this.verts =ris[0];
  
-  // console.log(tFPEnd-tFPStart ," ms for genFacePoints");
-  // console.log(tEPEnd-tEPStart ," ms for genEdgePoints");
-  // console.log(tVPEnd-tVPStart ," ms for genVertexPoints");
+  console.log("------- genFacePoints time :", tFPEnd-tFPStart ," ms ");
+  console.log("------- genEdgePoints time :", tEPEnd-tEPStart ," ms ");
+  console.log("------- genVertexPoints time :", tVPEnd-tVPStart ," ms ");
   // console.log("-----End-----");
 
+  var faceStart = new Date().valueOf();
   var new_face;
   var e0Ev;
   var e1Ev;
@@ -273,6 +305,8 @@ ParallelSubdivider.prototype.do_iteration= function(last_iteration){
     v0 = this.facesVs[(len*Math.floor(j/len))+(j-1+len)%len];
     v = this.facesVs[(len*Math.floor(j/len))+j%len];
     v1 = this.facesVs[(len*Math.floor(j/len))+(j+1)%len];
+
+    // il problema e' su get_edge
     e0Ev = this.edgesEvert[this.get_edge( v0, v)];
     e1Ev = this.edgesEvert[this.get_edge( v, v1)];
     facesVs.push(e0Ev);
@@ -288,11 +322,15 @@ ParallelSubdivider.prototype.do_iteration= function(last_iteration){
   this.vertForFace=4;
 
   facesVs= null;
-  //this.display();
+  var faceEnd = new Date().valueOf();
+  console.log("------- faceUpdate time :", faceEnd-faceStart ," ms ");
+  var linkStart = new Date().valueOf();
   /* 3. Update edges */
   if (!last_iteration) { /* Skip on last iteration */
     this.update_links();
   }
+  var linkEnd = new Date().valueOf();
+  console.log("------- linkUpdate time :", linkEnd-linkStart ," ms ");
 }
 
 
@@ -356,12 +394,57 @@ function Float32Concat(first, second)
 
     return result;
 }
-function flatList(listOfLists){
 
-  return listOfLists.reduce(function(previousValue, currentValue, index, array){  
-  return previousValue.concat( currentValue);}, [])
-}
+Array.prototype.flatten = function() {
+    var r = [];
+    for (var i = 0; i < this.length; ++i) {
+        var v = this[i];
+        if (v instanceof Array) {
+            Array.prototype.push.apply(this, v.flatten());
+        } else {
+            r.push(v);
+        }
+    }
+    return r;
+};
 
 
 })(this);
+
+
+
+// function mao (a,b){
+//   for(var i =b; i>0; i-- ){ 
+//     if (a%i===0) 
+//       return i;
+//   }
+// }
+// function hcf(text1,text2){
+//   var gcd=1;
+//   if (text1>text2) {
+//     text1=text1+text2;
+//     text2=text1-text2;
+//     text1=text1-text2;}
+//   if ((text2==(Math.round(text2/text1))*text1)) {
+//     gcd=text1;
+//   }
+//   else {
+//   for (var i = Math.round(text1/2) ; i > 1; i=i-1) {
+//     if ((text1==(Math.round(text1/i))*i))
+//     if ((text2==(Math.round(text2/i))*i)) {gcd=i; i=-1;}
+//   }
+// }
+// return gcd;
+// }
+
+// var Start = new Date().valueOf();
+//   mao(38603203,25641201);
+// var End = new Date().valueOf();
+// console.log(End -Start);
+
+// var Start = new Date().valueOf();
+//   hcf(38603203,25641201);
+// var End = new Date().valueOf();
+// console.log(End -Start);
+
 

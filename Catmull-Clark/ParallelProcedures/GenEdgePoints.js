@@ -52,22 +52,11 @@ GenEdgePoints.prototype.initProcedure= function(webCLProgram){
 
 }
 
-function hcf(text1,text2){
-  var gcd=1;
-  if (text1>text2) {
-    text1=text1+text2;
-    text2=text1-text2;
-    text1=text1-text2;}
-  if ((text2==(Math.round(text2/text1))*text1)) {
-    gcd=text1;
+function best (a,b){
+  for(var i =b; i>0; i-- ){ 
+    if (a%i===0&& b%i===0 ) 
+      return i;
   }
-  else {
-  for (var i = Math.round(text1/2) ; i > 1; i=i-1) {
-    if ((text1==(Math.round(text1/i))*i))
-    if ((text2==(Math.round(text2/i))*i)) {gcd=i; i=-1;}
-  }
-}
-return gcd;
 }
 GenEdgePoints.prototype.SetData =function (args){
   this.facesFvert= args[0];
@@ -82,7 +71,7 @@ GenEdgePoints.prototype.SetData =function (args){
   if (this.workGroupSize> this.edgesv0.length)
     this.localWorkSize[0] = this.edgesv0.length;
   else 
-    this.localWorkSize[0] = hcf(this.workGroupSize, this.edgesv0.length);
+    this.localWorkSize[0] = best(this.workGroupSize, this.edgesv0.length);
   
 
   // console.log(this.globalWorkSize[0],this.localWorkSize[0] ,this.edgesv0.length);
@@ -193,10 +182,6 @@ GenEdgePoints.prototype.RunProgram =function (){
 
     queue.enqueueNDRangeKernel(kernel, 1, 0, this.globalWorkSize, this.localWorkSize, null);
 
-
-    // qui errore queue si rompe dopo questo ^^^^^^^^^^^ la causa dovrebbe essere 
-    // o nel tempo che impiega il kernel a essere eseguito 
-    // o nei dati che gli sono passati 
 
   }
   catch (e)
